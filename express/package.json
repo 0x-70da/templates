@@ -1,0 +1,39 @@
+{
+  "name": "express",
+  "version": "1.0.0",
+  "description": "A simple Express.js server",
+  "main": "server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -b",
+    "start": "node dist/server.js",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate ",
+    "db:migrate": "drizzle-kit migrate ",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "better-auth": "^1.7.7",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.7",
+    "drizzle-orm": "1.0.0-rc.4",
+    "express": "^5.3.0",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "1.0.0-rc.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

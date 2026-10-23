@@ -188,7 +188,7 @@ apps/server/src/
 │       ├── services/         # business logic, one function per file
 │       ├── queries/          # DB queries, one function per file
 │       ├── schema/           # Zod schemas
-│       ├── types/
+│       ├── types/            # manual types
 │       └── utils/            # pure helpers
 ├── lib/                      # env.ts, errors.ts, auth.ts, shared helpers
 ├── middlewares/              # shared Express middlewares
@@ -246,12 +246,10 @@ import { AppError } from "../lib/errors";
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   if (error instanceof ZodError) {
-    res
-      .status(400)
-      .json({
-        success: false,
-        message: error.issues[0]?.message ?? "Invalid input",
-      });
+    res.status(400).json({
+      success: false,
+      message: error.issues[0]?.message ?? "Invalid input",
+    });
     return;
   }
   if (error instanceof AppError) {

@@ -1,8 +1,9 @@
 import { defineRelations } from "drizzle-orm";
 
 import * as schema from "./schema.js";
+import * as authSchema from "./auth-schema.js";
 
-export const relations = defineRelations(schema, (r) => ({
+export const relations = defineRelations({ ...schema, ...authSchema }, (r) => ({
   user: {
     // One user has many sessions
     sessions: r.many.session(),

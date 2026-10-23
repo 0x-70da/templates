@@ -1,8 +1,14 @@
 import { Response } from "express";
 
-export function success(res: Response, data: unknown, status = 200) {
+export function success(
+  res: Response,
+  message?: string,
+  data?: unknown,
+  status = 200,
+) {
   return res.status(status).json({
     success: true,
+    message,
     data,
   });
 }

@@ -12,7 +12,8 @@
     "db:generate": "drizzle-kit generate ",
     "db:migrate": "drizzle-kit migrate ",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "auth:generate": "pnpm dlx auth generate --config src/lib/auth.ts --output src/db/auth-schema.ts -y"
   },
   "keywords": [],
   "author": "",

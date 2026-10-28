@@ -1,4 +1,12 @@
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  serial,
+  integer,
+} from "drizzle-orm/pg-core";
 
 /* ───────────── Better Auth tables ───────────── */
 
@@ -73,3 +81,12 @@ export const verification = pgTable(
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
+
+export const images = pgTable("images", {
+  id: serial("id").primaryKey(),
+  publicId: text("public_id").notNull().unique(),
+  url: text("url").notNull(),
+  width: integer("width"),
+  height: integer("height"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

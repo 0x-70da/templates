@@ -10,6 +10,8 @@ function new-project {
         "2" = @{ Label = "Next.js";         Dir = "next" }
         "3" = @{ Label = "Express";         Dir = "express" }
         "4" = @{ Label = "React + Express"; Dir = "react-express" }
+        "5" = @{ Label = "Expo-go";         Dir = "expo-go"}
+        "6" = @{ Label = "Next + Express";  Dir = "next-express"}
     }
 
     if (-not $Name) { $Name = Read-Host "Project name" }

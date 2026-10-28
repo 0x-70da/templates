@@ -13,8 +13,13 @@ export function success(
   });
 }
 
-export function error(res: Response, message: string, status = 500) {
-  console.log(`Error: ${message}, Status: ${status}`);
+export function error(
+  res: Response,
+  message: string,
+  error?: unknown,
+  status = 500,
+) {
+  console.log(`Error: ${error}, Status: ${status}`);
   return res.status(status).json({
     success: false,
     message,

@@ -11,17 +11,16 @@ export const errorHandler: ErrorRequestHandler = (
   _next: NextFunction,
 ) => {
   if (err instanceof AuthError) {
-    return error(res, err.message, err.statusCode);
+    return error(res, err.message, err, err.statusCode);
   }
 
   if (err instanceof DrizzleQueryError) {
-    console.log(err.cause?.message);
-    return error(res, "Database Error", 500);
+    return error(res, "Database Error", err, 500);
   }
 
   if (err instanceof AppError) {
-    return error(res, err.message, err.statusCode);
+    return error(res, err.message, err.error, err.statusCode);
   }
 
-  return error(res, err.message, 500);
+  return error(res, err.message, err, 500);
 };

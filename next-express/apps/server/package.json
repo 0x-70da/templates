@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
+  "license": "ISC",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -b",
@@ -15,10 +17,6 @@
     "db:studio": "drizzle-kit studio",
     "auth:generate": "pnpm dlx auth generate --config src/lib/auth.ts --output src/db/auth-schema.ts -y"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "dependencies": {
     "better-auth": "^1.7.7",
     "cors": "^2.8.6",
@@ -36,7 +34,6 @@
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "1.0.0-rc.4",
-    "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "tsx": "^4.23.15"
   }
 }

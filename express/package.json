@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "A simple Express.js server",
   "main": "server.js",
+  "license": "ISC",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -b",
@@ -14,10 +16,6 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "dependencies": {
     "better-auth": "^1.7.7",
     "cors": "^2.8.6",

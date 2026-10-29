@@ -1,6 +1,7 @@
 {
   "name": "next-express",
   "private": true,
+  "version": "0.0.0",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -13,7 +14,7 @@
     "turbo": "^2.11.10",
     "typescript": "7.0.2"
   },
-  "packageManager": "pnpm@11.25.0",
+  "packageManager": "pnpm@12.4.2",
   "engines": {
     "node": ">=24"
   }

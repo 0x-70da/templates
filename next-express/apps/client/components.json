@@ -5,7 +5,7 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "app/globals.css",
+    "css": "../../packages/ui/src/styles/globals.css",
     "baseColor": "zinc",
     "cssVariables": true,
     "prefix": ""
@@ -14,10 +14,10 @@
   "rtl": false,
   "aliases": {
     "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
+    "hooks": "@/hooks",
     "lib": "@/lib",
-    "hooks": "@/hooks"
+    "utils": "@workspace/ui/lib/utils",
+    "ui": "@workspace/ui/components"
   },
   "menuColor": "default",
   "menuAccent": "subtle",

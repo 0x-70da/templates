@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -15,6 +16,9 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  output: "standalone",
+  outputFileTracingRoot: path.join(__dirname, "../../"),
+  transpilePackages: ["@workspace/ui"],
 };
 
 export default nextConfig;

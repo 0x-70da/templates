@@ -33,6 +33,9 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
+    "@workspace/types": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "@workspace/eslint-config": "workspace:*",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
     "@types/react": "^19",

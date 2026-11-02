@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth.js";
 import { error } from "@/lib/response.js";
-import { Session } from "@/types/auth.types.js";
+import type { Session } from "@/types/auth.types.js";
 import { fromNodeHeaders } from "better-auth/node";
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
 export const authMiddleware = async (
   req: Request,

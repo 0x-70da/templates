@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Roboto, Noto_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/helper-components/ThemeProvider";
+import NextTopLoader from "nextjs-toploader";
 
 const notoSansHeading = Noto_Sans({
   subsets: ["latin"],
@@ -47,6 +48,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           enableSystem
           disableTransitionOnChange
         >
+          <NextTopLoader
+            color="#2563eb"
+            height={3}
+            showSpinner={false}
+            shadow="0 0 10px #2563eb,0 0 5px #2563eb"
+          />
           {children}
         </ThemeProvider>
       </body>

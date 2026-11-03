@@ -1,9 +1,9 @@
-import { Response } from "express";
+import type { Response } from "express";
 
-export function success(
+export function success<T>(
   res: Response,
   message?: string,
-  data?: unknown,
+  data?: T,
   status = 200,
 ) {
   return res.status(status).json({

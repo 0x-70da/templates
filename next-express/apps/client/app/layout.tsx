@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Roboto, Noto_Sans } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/helper-components/ThemeProvider";
 import NextTopLoader from "nextjs-toploader";
+import { cn } from "@workspace/ui/lib/utils";
 
 const notoSansHeading = Noto_Sans({
   subsets: ["latin"],

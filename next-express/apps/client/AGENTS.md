@@ -1,548 +1,179 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# AGENTS.md (apps/client)
 
-## This is NOT the Next.js you know
+Next.js frontend. Read the root `AGENTS.md` first; this file adds client-specific rules.
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+> How to extend this file: add a new numbered section at the bottom, or a new numbered rule inside the matching section.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
-
-# AGENTS.md
-
-Instructions for AI coding agents working in this repository. Read this fully before making changes. Follow the existing patterns in the codebase first; if this file and the code disagree, ask before deciding.
+---
 
 ## 1. Stack
 
-- **Framework:** Next.js 16 (App Router) + React 19 + TypeScript (strict). No `src/` folder: `app/` lives at the project root.
-- **Styling:** Tailwind CSS v4 (CSS-first config in `app/globals.css`), `tw-animate-css`, `next-themes` for dark mode
-- **UI:** shadcn/ui built on **Base UI** (`@base-ui/react`), icons from `lucide-react`
-- **Database:** PostgreSQL (`pg`) + Drizzle ORM v1 (rc) + `drizzle-kit`
-- **Auth:** Better Auth
-- **Validation / forms:** Zod v4, `react-hook-form` + `@hookform/resolvers`
-- **Client data fetching:** TanStack Query (`@tanstack/react-query`), used in client components only
-- **Package manager:** `pnpm` only. Never use `npm` or `yarn`, never create other lockfiles.
+1.1 Next.js (App Router), React, TypeScript, Tailwind CSS.
+1.2 Components: **shadcn with Base UI** (not Radix UI). See section 9.
+1.3 Forms: `react-hook-form` with the zod resolver.
+1.4 Auth: `better-auth` client in `lib/auth-client.ts`. The auth routes and base URL live on the backend (`apps/server`). Check the better-auth docs for details.
 
-Library versions are new. Do not rely on memory of older versions: check `package.json` and the official docs for **Next.js 16, Drizzle v1, Zod 4, Better Auth, Shadcn/ui, and TanStack Query** before using an API you are not sure about.
+---
 
-Next.js 16 notes:
+## 2. Structure (Feature-Based)
 
-- `params`, `searchParams`, `cookies()`, and `headers()` are async and must be awaited.
-- Request interception uses `proxy.ts` (the successor of `middleware.ts`). Use it only for optimistic redirects, never as the only auth check.
-- Caching APIs (`use cache`, `revalidateTag`, `updateTag`, `revalidatePath`) changed in recent versions. Read the docs before using anything beyond `revalidatePath`.
-
-## 2. Commands
-
-```bash
-pnpm dev                 # start dev server
-pnpm build               # production build
-pnpm start               # run production build
-pnpm lint                # eslint
-pnpm typecheck           # tsc --noEmit
-pnpm shadcn <component>  # add a shadcn component, e.g. pnpm shadcn button
-pnpm db:generate         # generate a migration from schema changes
-pnpm db:migrate          # apply migrations
-pnpm db:push             # push schema directly (prototyping only, no migration file)
-pnpm db:studio           # drizzle studio
-```
-
-Definition of done for any task: `pnpm typecheck` and `pnpm lint` pass and the project builds. Do not leave unused imports, dead code, `console.log`, or commented-out code. For real schema changes use `db:generate` + `db:migrate`, not `db:push`.
-
-## 3. Project structure
-
-There is no `src/` folder. Everything below sits at the project root.
+The client is organized by feature, and features live inside the `app/` folder (not a `features/` folder).
 
 ```
-app/
-├── layout.tsx
-├── globals.css
-├── api/auth/[...all]/route.ts     # Better Auth handler (route handlers only when truly needed)
-└── <route>/
-    ├── page.tsx                   # composes the page from sections (keep it small)
-    ├── sections/                  # the page's sections, one per file (HeroSection.tsx, ...)
-    ├── components/                # components used only by this page
-    ├── hooks/                     # TanStack Query hooks + custom hooks for this page
-    ├── actions/                   # server actions for this page
-    ├── services/                  # business logic for this page
-    ├── queries/                   # database queries for this page
-    ├── types/                     # types for this page
-    ├── schema/                    # Zod schemas for this page
-    └── utils/                     # pure helper functions for this page (formatting, mapping, ...)
-components/                        # shared components (used by 2+ routes)
-├── ui/                            # shadcn components (generated by the CLI)
-├── layout                         # layout components (Header.tsx, Footer.tsx, etc...)
-├── helper-components/             # client providers, and helper components (e.g. QueryProvider)
-hooks/                             # shared hooks (used by 2+ routes)
-actions/                           # shared server actions
-services/                          # shared business logic
-types/                             # shared types
-schema/                            # shared zod schemas
-db/
-├── index.ts                       # Drizzle client
-├── schema.ts                      # ALL table definitions
-├── relations.ts                   # ALL relations
-├── migrations                     # database migrations folder
-└── queries/                       # shared database queries (used by 2+ routes)
-lib/                               # shared infra + helpers (utils.ts, auth.ts, auth-client.ts, env.ts, errors.ts, query-keys.ts, ...)
-public/                            # static assets
+apps/client/
+├── app/
+│   ├── <feature>/
+│   │   ├── components/    # feature components (including XYSkeleton.tsx loading skeletons)
+│   │   ├── sections/      # XYSection.tsx: page sections (they fetch data)
+│   │   ├── hooks/         # hooks used only by this feature
+│   │   ├── requests/      # API request functions of this feature
+│   │   ├── types/         # types used only by this feature
+│   │   ├── utils/         # utils used only by this feature
+│   │   ├── error.tsx
+│   │   ├── not-found.tsx
+│   │   └── page.tsx
+│   ├── error.tsx          # root error boundary
+│   ├── global-error.tsx   # root layout error boundary
+│   ├── not-found.tsx      # root 404
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/            # shared components (used by more than 2 features)
+│   └── <group>/           # e.g. components/products/ProductCard.tsx
+├── constants/
+├── hooks/                 # shared hooks
+├── lib/
+│   ├── api.ts             # prebuilt fetch functions
+│   └── auth-client.ts
+├── requests/              # shared requests
+├── types/                 # shared app-only types
+└── public/
 ```
 
-Rules:
+2.1 Everything specific to a feature goes inside that feature's folder.
+2.2 If something is used by **more than 2 features**, move it to the matching root-level folder outside `app/`.
+2.3 Put the right file in the right place. Example: `ProductCard.tsx` -> `app/products/components/ProductCard.tsx`, or `components/products/ProductCard.tsx` if shared.
+2.4 shadcn components are **not** placed in the client. They live in `@workspace/ui` (see section 9).
 
-- Create the per-route folders **only when the route needs them**. Do not create empty folders.
-- Keep things next to the route that uses them. When something is needed by a second route, move it up to the shared root-level location: `components/`, `hooks/`, `actions/`, `services/`, `db/queries/`, or `lib/` (shared types, Zod schemas, and helpers). A section reused by another route moves to `components/`.
-- Drizzle tables are defined in `db/schema.ts` and relations in `db/relations.ts`. Do not create per-table schema files. Do not confuse this with Zod schemas, which live in `schema/` folders and use the `.schema.ts` suffix.
-- Use the `@/` alias for imports from the project root (`@/components/...`, `@/db`, `@/lib/utils`). Avoid long relative paths (`../../../`); short relative imports within the same route folder are fine.
+---
 
-### One thing per file
+## 3. Prebuilt Functions
 
-**Every file in these folders contains exactly one thing.** Never put several actions, services, queries, hooks, schemas, utils, or components in the same file. except for types, you can put several types per file.
+3.1 `lib/api.ts` contains `get`, `post`, `put`, `patch`, `delete`. **Always use them. Never use the raw `fetch` keyword.**
+3.2 They are generic. Always pass the proper response type.
+3.3 **Only functions inside `requests/` folders may call `lib/api.ts`.** Pages, sections, and components never call it directly.
 
-- One server action per file in `actions/`
-- One service function per file in `services/`
-- One query function per file in `queries/`
-- One hook per file in `hooks/`
-- One Zod schema per file in `schema/` (the file may also export the type inferred from that schema)
-- One or many types per file in `types/` (a const array and the union type derived from it count as one thing)
-- One helper function per file in `utils/`
-- One exported component per file in `components/`, and one section per file in `sections/`
+---
 
-A file's single export is named after the file. Small private functions used only by that one export may stay in the same file, as long as they are not exported.
+## 4. Pages, Sections and Data Flow
 
-### File naming
-
-- **Components and sections:** `PascalCase` for the component and the file: `ProductCard.tsx`. Sections end with `Section`: `HeroSection.tsx`.
-- **Hooks:** the file is named exactly like the hook, starting with `use`: `useGetUsers.ts`, `useCreateUser.ts`.
-- **Everything else:** `<kebab-case-name>.<kind>.ts`, where **kind is the singular of the folder name**:
-
-  | Folder      | Kind          | File                      | Export             |
-  | ----------- | ------------- | ------------------------- | ------------------ |
-  | `actions/`  | `.action.ts`  | `get-users.action.ts`     | `getUsersAction`   |
-  | `services/` | `.service.ts` | `place-order.service.ts`  | `placeOrder`       |
-  | `queries/`  | `.query.ts`   | `get-user-by-id.query.ts` | `getUserById`      |
-  | `schema/`   | `.schema.ts`  | `create-user.schema.ts`   | `createUserSchema` |
-  | `types/`    | `.types.ts`   | `order-status.types.ts`   | `OrderStatus`      |
-  | `utils/`    | `.util.ts`    | `format-price.util.ts`    | `formatPrice`      |
-
-  The file name is the export's name in kebab-case (without the `Action` suffix for actions). Function names start with a verb.
-
-- Shared files in `lib/` use the same suffixes (`lib/action-result.types.ts`, `lib/format-date.util.ts`). Infrastructure files in `lib/` keep plain names: `utils.ts` (`cn`), `auth.ts`, `auth-client.ts`, `env.ts`, `errors.ts`, `query-keys.ts`.
-- **Exceptions:** files inside `components/ui/` keep the names generated by the shadcn CLI. Next.js special files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `route.ts`, `proxy.ts`) keep their required names.
-
-## 4. TypeScript rules
-
-- `strict` mode is on. **Never use `any`.** Use `unknown` and narrow it. Avoid `as` casts and the non-null assertion `!`; if unavoidable, add a short comment explaining why.
-- Use `import type { ... }` for type-only imports.
-- Exported functions must have an explicit return type. Local variables can rely on inference.
-- Prefer `as const` objects + derived union types over `enum`:
-  ```ts
-  // types/order-status.type.ts
-  export const ORDER_STATUS = [
-    "pending",
-    "paid",
-    "shipped",
-    "cancelled",
-  ] as const;
-  export type OrderStatus = (typeof ORDER_STATUS)[number];
-  ```
-- Use `satisfies` to check an object's shape without widening its type.
-- Handle `null` and `undefined` explicitly. Do not silence errors with `// @ts-ignore`; `@ts-expect-error` is allowed only with a reason.
-
-### Creating a new type
-
-1. **Derive, don't duplicate.** The source of truth is the Drizzle table or the Zod schema:
-
-   ```ts
-   // db/schema.ts (next to the table)
-   export type Product = typeof products.$inferSelect;
-   export type NewProduct = typeof products.$inferInsert;
-
-   // app/products/schema/create-product.schema.ts (next to the schema)
-   export type CreateProductInput = z.infer<typeof createProductSchema>;
-   ```
-
-2. Write a manual type only when there is nothing to derive from (component props, view models, action results).
-3. Placement: route-specific -> that route's `<route>/types/<name>.types.ts`; shared -> `types/<name>.types.ts`; component props -> in the same file as the component.
-4. Naming: `PascalCase`, no `I` prefix. Props: `<Component>Props`. Inputs: `<Action><Entity>Input`. Use `type` by default; use `interface` only when extension/merging is needed.
-
-## 5. React components
-
-- **Server Components by default.** Add `"use client"` only when you need state, effects, event handlers, or browser APIs, and push it as far down the tree as possible (small leaf components, not whole pages).
-- Function components with **named exports** (`page.tsx`, `layout.tsx`, etc. use default exports as Next.js requires).
-- Props are typed with a `<Component>Props` type declared above the component. Destructure props in the signature.
-- Keep components small and single-purpose (aim for under ~150 lines). When a component grows, split it into more files.
-- **No logic inside JSX.** Extract pure computations to `utils/`, business rules to `services/`, and stateful or data-fetching logic to hooks (`hooks/`). JSX should read like a description of the UI.
-- Compose with `children` and small components instead of piling up boolean props.
-- Handle loading (`loading.tsx` / `Suspense` / `isFetching...` flags), empty, and error states explicitly. Use `next/image` and `next/link`.
-- Accessibility: semantic HTML, labels for inputs, `alt` for images, keyboard-reachable interactive elements.
-- **Client components never import from `queries/` or `services/` and never call `fetch` directly.** They get data through hooks (section 7).
-
-### Pages and sections
-
-- `page.tsx` only **composes** the page from sections. Do not write large JSX blocks inside `page.tsx`: when a page grows beyond a few lines of JSX, split it into sections in the route's `sections/` folder.
-- A section is one logical block of the page (hero, features, pricing, testimonials, call to action, footer). One section per file, `PascalCase` with a `Section` suffix: `HeroSection.tsx`, `PricingSection.tsx`.
-- A section renders its own `<section>` wrapper (spacing, container, heading) and uses the route's `components/` for its building blocks. Keep each section under ~150 lines; if it grows, extract parts into components.
-- Sections are Server Components by default. Pass data from `page.tsx` as props, or make the section an async Server Component that fetches its own independent data (wrap it in `<Suspense>`). Only the interactive parts become client components.
-- A section used by a second route moves to the shared root `components/` folder.
+4.1 A **page** (`page.tsx`) does **not** fetch data and does not call request functions. It only composes sections and wraps data-fetching sections in `Suspense`.
+4.2 A **section** (`sections/XYSection.tsx`) is the unit responsible for fetching. It is an async server component that calls a function from the feature's `requests/` folder, then passes the data down to components as props.
+4.3 Components receive data through props and only render it. They do not fetch GET data themselves.
+4.4 Each section that fetches data is wrapped in `Suspense` in the page, with a loading skeleton as the `fallback`.
+4.5 The skeleton is `XYSkeleton.tsx`, placed in the feature's `components/` folder (or the proper root-level `components/` folder if shared), and matches the layout of the section it replaces.
+4.6 Components may call functions from the `requests/` folder directly for non-GET operations (create, update, delete). They must still never call `lib/api.ts` directly.
+4.7 Sections that do not fetch anything do not need `Suspense`.
+4.8 Do not build manual loading/error handling for data fetching with `useState`/`useEffect`. Loading is handled by `Suspense` + skeletons, errors by `error.tsx` (section 5).
 
 ```tsx
-// app/page.tsx
-import { HeroSection } from "./sections/HeroSection";
-import { FeaturesSection } from "./sections/FeaturesSection";
-import { PricingSection } from "./sections/PricingSection";
+// app/products/page.tsx
+import { Suspense } from "react";
+import { ProductListSection } from "./sections/ProductListSection";
+import { ProductListSkeleton } from "./components/ProductListSkeleton";
 
-export default function HomePage() {
+export default function ProductsPage() {
   return (
-    <>
-      <HeroSection />
-      <FeaturesSection />
-      <PricingSection />
-    </>
+    <main>
+      <Suspense fallback={<ProductListSkeleton />}>
+        <ProductListSection />
+      </Suspense>
+    </main>
   );
 }
 ```
 
-### Reusable UI: extract repeated markup
-
-- **Any UI shape that appears more than once becomes its own component.** For markup, extract on the second occurrence; do not copy-paste JSX. (This is the one place where "don't abstract too early" does not apply.)
-- Repeated items that come from data are rendered with `.map()` over a typed array and one item component, never as duplicated JSX blocks.
-- Placement: used by one page/section -> that route's `components/`; used by 2+ routes -> root `components/`; a generic primitive (button, input, dialog) -> add it with `pnpm shadcn <component>`.
-- Static content arrays that belong to one section may stay in that section's file (not exported); shared ones go in `lib/`.
-- Make extracted components flexible with typed props and a `className` prop merged with `cn()`, instead of duplicating them with small variations.
-
-### Responsive design (mobile-first)
-
-- Every page, section, and component must be fully responsive and **mobile-first**. Write the base (unprefixed) utilities for the smallest screen first, then add changes for larger screens with Tailwind's breakpoint prefixes `sm:`, `md:`, `lg:`, `xl:`, `2xl:`. These are `min-width` breakpoints, so styles scale up.
-- Do not write desktop-first code (a desktop layout that is undone for mobile) and avoid `max-*:` variants. Use Tailwind's default breakpoints and utilities, not custom CSS media queries or invented breakpoints.
-- Use fluid layouts: `flex` / `grid`, `gap`, `w-full`, `max-w-*`, responsive padding. Avoid fixed pixel widths and heights that can overflow small screens. There must be no horizontal scrolling on mobile.
-- Make touch targets comfortable (about 44px high) and do not rely on hover for essential actions.
-- Check each change mentally at phone width (~360px) first, then at `md`, `lg`, and wider.
-
-```tsx
-<div className="flex flex-col gap-4 p-4 md:flex-row md:gap-6 md:p-8">
-  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {/* cards */}
-  </div>
-</div>
+```
+page.tsx
+  └─ <Suspense fallback={<XYSkeleton />}>
+       └─ sections/XYSection.tsx -> requests/xY.ts -> lib/api.ts -> server
+            └─ components/XY.tsx (receives data as props)
 ```
 
-### shadcn/ui (Base UI, not Radix)
+---
 
-- This project uses the **Base UI** variant of shadcn. **Never import from `@radix-ui/*`** and do not assume Radix APIs.
-- Base UI composes through the **`render` prop**, not `asChild`. Check the existing components in `components/ui/` and the Base UI docs for the right pattern.
-- Add components with `pnpm shadcn <component>`. Do not hand-write what the CLI can generate, and avoid editing generated files in `components/ui/` unless needed.
-- Use existing shadcn components before building custom primitives.
+## 5. Error and Not-Found Handling
 
-### Styling and `cn()`
+5.1 Every route (feature) has its own `error.tsx` and `not-found.tsx`.
+5.2 The root has `app/error.tsx`, `app/not-found.tsx`, and `app/global-error.tsx` (global-error catches errors in the root layout).
+5.3 `error.tsx` must be a Client Component (`"use client"`), show a clear message, and include a **Retry** button that calls the `reset` function.
+5.4 `not-found.tsx` shows a suitable 404 message for that route and includes a **Back** button. The back button needs `router.back()`, so make it a small shared client component and reuse it everywhere.
+5.5 Trigger the not-found UI from sections/pages with `notFound()` when the requested resource does not exist.
+5.6 Messages must be user-friendly. Never show raw error messages, stack traces, or internal details to the user.
 
-- Tailwind classes only. No inline `style` unless the value is truly dynamic. Use theme tokens (`bg-background`, `text-muted-foreground`, ...) instead of hard-coded colors so dark mode works.
-- **Always use `cn()` from `@/lib/utils`** to combine classes, add conditional classes, or let a parent override styles via `className`. Never concatenate class strings by hand or with template literals.
+---
 
-```tsx
-// app/products/components/ProductCard.tsx
-import { cn } from "@/lib/utils";
-import type { Product } from "@/db/schema";
-import { formatPrice } from "../utils/format-price.util";
+## 6. Validation and Forms
 
-type ProductCardProps = {
-  product: Product;
-  isFeatured?: boolean;
-  className?: string;
-};
+6.1 Zod schemas come from `@workspace/validation`. Never define them locally.
+6.2 Import the schema in the **`requests/` file** that calls `lib/api.ts`.
+6.3 Every form uses `react-hook-form` with `zodResolver`, using the schema from `@workspace/validation`.
 
-export function ProductCard({
-  product,
-  isFeatured = false,
-  className,
-}: ProductCardProps) {
-  const price = formatPrice(product.price); // logic lives in a function, not in JSX
+---
 
-  return (
-    <article
-      className={cn(
-        "rounded-lg border p-4",
-        isFeatured && "border-primary",
-        className,
-      )}
-    >
-      <h3 className="font-medium">{product.name}</h3>
-      <p className="text-muted-foreground">{price}</p>
-    </article>
-  );
-}
-```
+## 7. Caching (`use cache`)
 
-## 6. Writing logic
+7.1 Caching is applied to the **functions in the `requests/` folders**, because they are the ones that talk to the API.
+7.2 **Not every function needs `use cache` and not every page needs to be cached.** Cache only when there is a real benefit, and choose the refresh policy based on how the data behaves (how often it changes, how stale it may be).
+7.3 Public (non-user-specific) data: evaluate caching the request function with `use cache`, with a cache tag and a lifetime that suits the data.
+7.4 Public pages: use **page-level** caching when the page content is suitable for reuse.
+7.5 Independent sections: use **component-level** caching only when there is a clear reason to isolate that section.
+7.6 **User-specific data must never be cached in a way that is shared between users.**
+7.7 After CRUD operations, refresh the cache with `updateTag` (when the user must see the change immediately) or `revalidateTag` (when a slight delay is acceptable). Choose based on how fast the update must appear.
+7.8 Time-sensitive data (stock, balances, availability, prices at checkout, etc.): even if a cached copy is shown in the UI, verify against the trusted source when performing the important operation.
+7.9 Cache invalidation (`updateTag` / `revalidateTag`) runs on the server (Server Action or Route Handler), not in a client component. No actions folder is defined yet, so **notify the owner before adding one**.
+7.10 Check the current Next.js docs for `use cache`, `cacheTag`, `cacheLife`, `updateTag`, and `revalidateTag` before using them. Their APIs and required config (`cacheComponents`) change between versions.
 
-The code must be **readable, scalable, and maintainable**.
+---
 
-- **Put logic in functions, then call them.** Never write logic inline inside a component, server action, or hook body. Write a named function (in its own file) and use it.
-- **Where logic goes:**
-  - **Business logic** (rules, calculations, orchestration, multi-step operations, transactions) -> `services/` (route-level, or root `services/` if shared).
-  - **Pure helpers** (formatting, mapping, parsing, small generic functions) -> `utils/` (or `lib/` if shared).
-  - **Database access** -> `queries/` (see section 10).
-- One function = one responsibility. If you need "and" to describe it, split it.
-- Name functions with a verb: `calculateOrderTotal`, `placeOrder`, `getUserById`, `formatPrice`, `isOrderCancellable`. Booleans start with `is/has/can/should`.
-- Prefer pure functions (same input -> same output, no hidden side effects). Isolate side effects (DB, network, files) in clearly named functions.
-- More than 2 parameters -> take a single typed object parameter.
-- Use early returns instead of deep nesting. Avoid nested ternaries.
-- No magic numbers or strings: use a named constant.
-- Don't repeat yourself, but don't abstract too early: extract on the second or third real repetition.
-- Comments explain **why**, not what. Good naming replaces most comments.
-- Do not swallow errors with an empty `catch`.
+## 8. Accessibility, Semantics and Performance
 
-### Services
+8.1 Use **semantic HTML**: `main`, `header`, `nav`, `section`, `article`, `aside`, `footer`, proper heading order (one `h1` per page, no skipped levels), `button` for actions, `a` for navigation, `ul/ol` for lists.
+8.2 Accessibility: meaningful `alt` text (empty `alt=""` for decorative images), labels for every form input, visible focus states, full keyboard support, correct `aria-*` only when semantics are not enough, enough color contrast, respect `prefers-reduced-motion`.
+8.3 Images: **always use `next/image`, never the plain `img` tag.** Provide `width`/`height` (or `fill` with sizes), a proper `sizes` prop for responsive images, and `priority` only for above-the-fold (LCP) images.
+8.4 Fonts: use `next/font`. Do not load fonts through manual `<link>` tags.
+8.5 Keep Client Components to a minimum. Default to Server Components and add `"use client"` only to the smallest component that needs interactivity.
+8.6 Lazy-load heavy components that are not needed on first render (`next/dynamic`). Avoid heavy dependencies when a small solution works.
+8.7 Use `Suspense` + skeletons to stream slow sections (section 4), and avoid layout shift (reserve space for images and skeletons).
+8.8 Set page `metadata` (title, description) for every route, and use `next/link` for internal navigation.
+8.9 All of the above must follow the structure and code rules in this file. Performance work never justifies breaking the folder structure, data flow, or naming rules.
 
-- Services contain business rules and call query functions. They receive plain typed input and return plain data. They know nothing about `Request`, `FormData`, cookies, or sessions.
-- For expected business failures (not found, insufficient stock, not allowed), **throw `AppError`** from `lib/errors.ts` with a stable `code` and a human-readable message. Server actions catch it and convert it to an `ActionResult`.
-- If an operation is plain CRUD with no business rule, the action or Server Component may call the query directly. Do not create pass-through services that only forward to a query.
+---
 
-```ts
-// app/orders/services/place-order.service.ts
-import { AppError } from "@/lib/errors";
-import type { Order } from "@/db/schema";
-import { getProductById } from "../queries/get-product-by-id.query";
-import { insertOrder } from "../queries/insert-order.query";
-import { calculateOrderTotal } from "../utils/calculate-order-total.util";
-import type { PlaceOrderInput } from "../schema/place-order.schema";
+## 9. UI and Styling
 
-export async function placeOrder(
-  input: PlaceOrderInput & { userId: string },
-): Promise<Order> {
-  const product = await getProductById(input.productId);
-  if (!product) throw new AppError("NOT_FOUND", "Product not found");
-  if (product.stock < input.quantity)
-    throw new AppError("OUT_OF_STOCK", "Not enough stock");
+9.1 shadcn is used with **Base UI**, not Radix UI. Do not install or import Radix primitives.
+9.2 **All shadcn components are installed into `@workspace/ui`** (`packages/ui`) and imported from there (e.g. `@workspace/ui/components/button`). Do not add shadcn components inside `apps/client`.
+9.3 Follow the shadcn monorepo setup when adding components (see `components.json` in `apps/client` and `packages/ui`). If unsure about where a command will place files, ask first.
+9.4 Prefer shadcn components (or other shadcn registries if provided) over building from scratch.
+9.5 Mobile-first and responsive.
+9.6 Use Tailwind utilities. Do not write custom CSS.
+9.7 Use the variables and utilities defined in `app/globals.css` so styling stays consistent.
+9.8 Non-shadcn shared components go in `components/` (e.g. `components/helper-components/`).
 
-  const total = calculateOrderTotal(product.price, input.quantity);
-  return insertOrder({ ...input, total });
-}
-```
+---
 
-## 7. Data flow: reading and writing
+## 10. Types
 
-```
-Server Component:  page.tsx -> service or query -> DB
-Client Component: component -> hook (TanStack Query) -> server action -> service or query -> DB
-```
+10.1 Shared and contract types (anything that crosses client/server) come from `@workspace/types`.
+10.2 Component props types live in the same file as the component.
+10.3 Feature-only types go in the feature's `types/` folder (`xY.types.ts`).
+10.4 Never use `any`.
 
-### Response shape
+---
 
-Every server action (and every route handler) returns this shape:
+## 11. Code Rules
 
-```ts
-// types/action-result.types.ts
-export type ActionResult<T> =
-  | { success: true; data: T; message: string }
-  | { success: false; message: string };
-```
-
-- Success: `{ success: true, data, message }`
-- Failure: `{ success: false, message }` (no `data`, no extra fields)
-- `message` is always a human-readable string that can be shown to the user.
-
-### Server Components: call functions directly
-
-- Server Components fetch data by calling **query or service functions directly** inside the component (or its `page.tsx`). Do not use TanStack Query, hooks, or API routes there.
-- Use `loading.tsx` or `<Suspense>` for streaming; fetch independent data in parallel (`Promise.all`).
-
-### Client Components: TanStack Query through custom hooks
-
-- In client components, use **TanStack Query**, always wrapped in a **custom hook**. Never call `useQuery` / `useMutation` directly inside a component.
-- **One hook per operation, one file per hook:** `useGetUsers`, `useGetUserById`, `useCreateUser`, `useUpdateUser`, `useDeleteUser` in `useGetUsers.ts`, `useCreateUser.ts`, etc.
-- The hook's `queryFn` / `mutationFn` calls a **server action**. If the action returns `{ success: false }`, the hook throws `new Error(result.message)` so TanStack Query sets `isError`.
-- **Return only what the component needs**, under **descriptive names** that include the entity or operation. Do not return the raw query result or spread it.
-  - Queries: `data` -> `users`, `isLoading` -> `isFetchingUsers`, `isError` -> `isFetchUsersError`, `error` -> `fetchUsersError`
-  - Mutations: `mutate` -> `createUser`, `isPending` -> `isCreatingUser`, `isError` -> `isCreateUserError`, `error` -> `createUserError`
-- Query keys come from the factory in `lib/query-keys.ts`. Never write key arrays inline.
-- Mutations invalidate the affected keys in `onSuccess`.
-- The `QueryClientProvider` lives in `components/providers/QueryProvider.tsx` (a client component that creates the `QueryClient` once with `useState`) and wraps the app in `app/layout.tsx`.
-
-```ts
-// lib/query-keys.ts
-export const queryKeys = {
-  users: {
-    all: ["users"] as const,
-    detail: (id: string) => ["users", "detail", id] as const,
-  },
-};
-```
-
-```ts
-// app/users/hooks/useGetUsers.ts
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
-import { getUsersAction } from "../actions/get-users.action";
-
-export function useGetUsers() {
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: queryKeys.users.all,
-    queryFn: async () => {
-      const result = await getUsersAction();
-      if (!result.success) throw new Error(result.message);
-      return result.data;
-    },
-  });
-
-  return {
-    users: data ?? [],
-    isFetchingUsers: isLoading,
-    isFetchUsersError: isError,
-    fetchUsersError: error,
-  };
-}
-```
-
-```ts
-// app/users/hooks/useCreateUser.ts
-"use client";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
-import { createUserAction } from "../actions/create-user.action";
-import type { CreateUserInput } from "../schema/create-user.schema";
-
-export function useCreateUser() {
-  const queryClient = useQueryClient();
-
-  const { mutate, isPending, isError, error } = useMutation({
-    mutationFn: async (input: CreateUserInput) => {
-      const result = await createUserAction(input);
-      if (!result.success) throw new Error(result.message);
-      return result.data;
-    },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
-  });
-
-  return {
-    createUser: mutate,
-    isCreatingUser: isPending,
-    isCreateUserError: isError,
-    createUserError: error,
-  };
-}
-```
-
-### Server actions
-
-- One action per file in `actions/` (route-level, or root `actions/` if shared), named `<name>.action.ts`. The file starts with `"use server"` and exports one async function named `<name>Action`.
-- Every action follows this order: **authenticate -> validate with Zod -> call a service or query -> revalidate -> return an `ActionResult`.**
-- Actions **return** `{ success: false, message }` for expected failures (unauthorized, validation, `AppError`) instead of throwing. Throw only for truly unexpected errors.
-- Always re-validate on the server even if the client form already validated.
-- Use `revalidatePath` for pages rendered by Server Components. Client-side caches are invalidated by the hooks (above).
-
-```ts
-// app/orders/actions/place-order.action.ts
-"use server";
-
-import { headers } from "next/headers";
-import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
-import { AppError } from "@/lib/errors";
-import type { ActionResult } from "@/types/action-result.types";
-import type { Order } from "@/db/schema";
-import { placeOrderSchema } from "../schema/place-order.schema";
-import { placeOrder } from "../services/place-order.service";
-
-export async function placeOrderAction(
-  input: unknown,
-): Promise<ActionResult<Order>> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return { success: false, message: "Unauthorized" };
-
-  const parsed = placeOrderSchema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      success: false,
-      message: parsed.error.issues[0]?.message ?? "Invalid input",
-    };
-  }
-
-  try {
-    const order = await placeOrder({ ...parsed.data, userId: session.user.id });
-    revalidatePath("/orders");
-    return { success: true, data: order, message: "Order placed successfully" };
-  } catch (error) {
-    if (error instanceof AppError)
-      return { success: false, message: error.message };
-    throw error;
-  }
-}
-```
-
-### Route handlers
-
-Use `app/**/route.ts` only when a server action does not fit: the Better Auth handler, webhooks, or endpoints consumed by external clients. For those, return JSON in the same `ActionResult` shape with correct HTTP status codes (`200`, `201`, `400`, `401`, `403`, `404`, `409`, `500`).
-
-## 8. Forms and validation (Zod 4 + react-hook-form)
-
-- Define each Zod schema once in the route's `schema/` folder (one schema per file) and use it in **both** the client form (`zodResolver`) and the server action.
-- Zod 4 API: use top-level validators (`z.email()`, `z.url()`, `z.uuid()`) and the `error` option for custom messages. Do not use Zod 3 patterns that are deprecated.
-- If a schema uses `transform` or `default`, use `z.input<>` for the form values and `z.output<>` for the parsed result.
-- Client forms: `useForm` + `zodResolver` (field errors come from `formState.errors`), submit through a mutation hook (e.g. `useCreateUser`), show the hook's error message, and disable the submit button while the `is...ing` flag is true.
-
-```ts
-// app/products/schema/create-product.schema.ts
-import { z } from "zod";
-
-export const createProductSchema = z.object({
-  name: z.string().min(1, { error: "Name is required" }).max(120),
-  price: z.number().positive(),
-});
-
-export type CreateProductInput = z.infer<typeof createProductSchema>;
-```
-
-## 9. Authentication (Better Auth)
-
-- Server config in `lib/auth.ts`, client config in `lib/auth-client.ts`, handler at `app/api/auth/[...all]/route.ts`.
-- Read the session on the server with `auth.api.getSession({ headers: await headers() })`. Use `authClient` only in client components.
-- **Check the session inside every protected page and server action.** `proxy.ts` redirects are a convenience, not security.
-- Auth tables live in `db/schema.ts`. Follow the Better Auth docs/CLI for their shape; do not invent columns.
-- Never store tokens in `localStorage`. Never log sessions or credentials.
-
-## 10. Database (Drizzle)
-
-- Tables are defined in `db/schema.ts`, relations in `db/relations.ts`. Drizzle v1 differs from 0.x: check the existing files and the v1 docs before writing relations or queries with relational APIs.
-- After changing the schema run `pnpm db:generate`, review the generated SQL, then `pnpm db:migrate`. Never edit an already-applied migration; create a new one.
-- Tables: plural `snake_case`. Columns: `snake_case` in the DB, `camelCase` in TypeScript. Every table has a primary key and `createdAt` / `updatedAt`. Add foreign keys and indexes for columns used in joins and filters.
-- **Every query is a function in its own file** in a `queries/` folder: the route's own `queries/` folder, or `db/queries/` when shared by 2+ routes. Never write Drizzle queries inside components, actions, services, or hooks directly.
-- Function names: `getXById`, `getXByY`, `listX`, `insertX`, `updateX`, `deleteX`, `countX`. File = the function name in kebab-case + `.query.ts`.
-- Select only the columns you need for lists. Paginate lists. Return `null` (do not throw) when a single record is not found; the caller decides what that means.
-- Use a transaction for any operation with more than one write (usually orchestrated in a service).
-- Queries contain no business rules and no auth checks; those belong to services, actions, or pages.
-
-```ts
-// app/products/queries/get-product-by-id.query.ts
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { products, type Product } from "@/db/schema";
-
-export async function getProductById(id: string): Promise<Product | null> {
-  const [row] = await db
-    .select()
-    .from(products)
-    .where(eq(products.id, id))
-    .limit(1);
-  return row ?? null;
-}
-```
-
-## 11. Environment & security
-
-- Validate all env vars with Zod in `lib/env.ts` and import `env` from there instead of reading `process.env` elsewhere.
-- Never commit `.env`. When you add a variable, update `.env.example` too.
-- Only variables prefixed with `NEXT_PUBLIC_` reach the browser; they must never contain secrets.
-- Never trust client input. Validate on the server.
-- Never log secrets, tokens, or personal data.
-
-## 12. Working agreement
-
-- Before writing code, look at an existing route and follow the same structure and naming.
-- Make the smallest change that solves the task. Do not refactor unrelated code or reformat files you did not need to touch.
-- Do not add a dependency without a clear reason; prefer what the stack already provides. Use `pnpm add`.
-- If requirements are ambiguous or a change affects the architecture, ask first instead of guessing.
-- When done, briefly summarize what changed and anything the user must do (run a migration, add an env var).
+11.1 Do not write logic directly in a page, section, or component. Extract it into a function (a util or a hook).
+11.2 Follow the naming conventions in the root `AGENTS.md` (components `XY.tsx`, sections `XYSection.tsx`, skeletons `XYSkeleton.tsx`, hooks `useXY.ts`, requests `xY.ts`, types `xY.types.ts`).
+11.3 Keep code simple, readable, and clean.

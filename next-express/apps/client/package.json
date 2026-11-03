@@ -19,12 +19,11 @@
     "@workspace/ui": "workspace:*",
     "nextjs-toploader": "^3.9.17",
     "next": "16.4.0",
-    "next-cloudinary": "^6.19.3",
     "next-themes": "^0.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-hook-form": "^7.90.0",
-    "zod": "^4.6.7"
+    "@workspace/validation": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

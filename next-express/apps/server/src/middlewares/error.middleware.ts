@@ -1,9 +1,4 @@
-import type {
-  ErrorRequestHandler,
-  NextFunction,
-  Request,
-  Response,
-} from "express";
+import type { ErrorRequestHandler, NextFunction, Request, Response } from "express";
 import { error } from "../lib/response.js";
 import { APIError as AuthError } from "better-auth/api";
 import { DrizzleQueryError } from "drizzle-orm";

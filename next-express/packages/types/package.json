@@ -5,8 +5,11 @@
   "main": "./src/index.ts",
   "type": "module",
   "types": "./src/index.ts",
-  "dependencies": {
+  "devDependencies": {
     "@workspace/typescript-config": "workspace:*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
   },
   "exports": {
     ".": {
@@ -14,8 +17,5 @@
       "default": "./src/index.ts",
       "types": "./src/index.ts"
     }
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

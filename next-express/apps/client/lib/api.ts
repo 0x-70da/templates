@@ -12,22 +12,16 @@ export type ApiResponse<T> = ApiBody<T> & {
   headers: Headers;
 };
 
-export const get = async <T>(
-  url: string,
-  options?: RequestInit,
-): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api${url}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      ...options,
-      credentials: "include",
+export const get = async <T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> => {
+  const response: Response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api${url}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
-  const responseBody: ApiBody<T> = await response.json();
+    ...options,
+    credentials: "include",
+  });
+  const responseBody = (await response.json()) as ApiBody<T>;
   return {
     ...responseBody,
     status: response.status,
@@ -35,27 +29,24 @@ export const get = async <T>(
     url: response.url,
     ok: response.ok,
     headers: response.headers,
-  } as ApiResponse<T>;
+  };
 };
 
-export const post = async <T, U>(
+export const post = async <T>(
   url: string,
-  body?: U,
+  body?: unknown,
   options?: RequestInit,
 ): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api${url}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-      ...options,
-      credentials: "include",
+  const response: Response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api${url}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
-  const responseBody: ApiBody<T> = await response.json();
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    ...options,
+    credentials: "include",
+  });
+  const responseBody = (await response.json()) as ApiBody<T>;
   return {
     ...responseBody,
     status: response.status,
@@ -63,27 +54,24 @@ export const post = async <T, U>(
     url: response.url,
     ok: response.ok,
     headers: response.headers,
-  } as ApiResponse<T>;
+  };
 };
 
-export const put = async <T, U>(
+export const put = async <T>(
   url: string,
-  body: U,
+  body?: unknown,
   options?: RequestInit,
 ): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api${url}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-      ...options,
-      credentials: "include",
+  const response: Response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api${url}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
-  const responseBody: ApiBody<T> = await response.json();
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    ...options,
+    credentials: "include",
+  });
+  const responseBody = (await response.json()) as ApiBody<T>;
   return {
     ...responseBody,
     status: response.status,
@@ -91,27 +79,24 @@ export const put = async <T, U>(
     url: response.url,
     ok: response.ok,
     headers: response.headers,
-  } as ApiResponse<T>;
+  };
 };
 
-export const patch = async <T, U>(
+export const patch = async <T>(
   url: string,
-  body: U,
+  body?: unknown,
   options?: RequestInit,
 ): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api${url}`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-      ...options,
-      credentials: "include",
+  const response: Response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api${url}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
-  const responseBody: ApiBody<T> = await response.json();
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    ...options,
+    credentials: "include",
+  });
+  const responseBody = (await response.json()) as ApiBody<T>;
   return {
     ...responseBody,
     status: response.status,
@@ -119,25 +104,19 @@ export const patch = async <T, U>(
     url: response.url,
     ok: response.ok,
     headers: response.headers,
-  } as ApiResponse<T>;
+  };
 };
 
-export const del = async <T>(
-  url: string,
-  options?: RequestInit,
-): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api${url}`,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      ...options,
-      credentials: "include",
+export const del = async <T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> => {
+  const response: Response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api${url}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
-  const responseBody: ApiBody<T> = await response.json();
+    ...options,
+    credentials: "include",
+  });
+  const responseBody = (await response.json()) as ApiBody<T>;
   return {
     ...responseBody,
     status: response.status,
@@ -145,5 +124,5 @@ export const del = async <T>(
     url: response.url,
     ok: response.ok,
     headers: response.headers,
-  } as ApiResponse<T>;
+  };
 };

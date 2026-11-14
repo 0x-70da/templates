@@ -1,159 +1,154 @@
-# Turborepo starter
+# 🐺 Anubis
 
-This Turborepo starter is maintained by the Turborepo core team.
+نظام **RAG** للكلية. دلوقتي في مرحلة الـ **Demo**.
 
-## Using this example
+المشروع **Turborepo monorepo** فيه `client` و `server` وكام package مشتركة.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
+## 🧰 التقنيات
+
+| الجزء   | التقنيات                                                                                  |
+| ------- | ----------------------------------------------------------------------------------------- |
+| Client  | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui, TanStack Query, Zustand, React Hook Form |
+| Server  | Express 5, TypeScript, Drizzle ORM, PostgreSQL, Better Auth                               |
+| Shared  | Zod schemas, Shared types, ESLint/TS configs, UI components                               |
+| Tooling | pnpm, Turborepo, Docker, Prettier                                                         |
+
+---
+
+## 📁 بنية المشروع
+
+```
+Anubis/
+├── apps/
+│   ├── client/        # Next.js (الواجهة)
+│   └── server/        # Express API
+└── packages/
+    ├── types/             # الـ types المشتركة
+    ├── validation/        # الـ Zod schemas المشتركة
+    ├── ui/                # عناصر shadcn المشتركة
+    ├── eslint-config/     # إعدادات ESLint
+    └── typescript-config/ # إعدادات TypeScript
 ```
 
-## What's inside?
+- كل **types** المشتركة بين الـ client والـ server بتتحط في `packages/types`.
+- كل **Zod schemas** بتتحط في `packages/validation` عشان نستخدمها في الاتنين.
+- عناصر الـ UI المشتركة (shadcn) في `packages/ui`.
+- قواعد الكود وتنظيم الـ folders موجودة في ملفات **`AGENTS.md`** (في الـ root وفي كل app).
 
-This Turborepo includes the following packages/apps:
+---
 
-### Apps and Packages
+## ✅ المتطلبات
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- **Node.js** `>= 24`
+- **pnpm** `12.4.2`
+- **Docker** (لقاعدة البيانات)
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+---
 
-### Utilities
+## 🚀 تشغيل المشروع
 
-This Turborepo has some additional tools already setup for you:
+```bash
+# 1. نزّل الـ dependencies
+pnpm install
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+# 2. جهّز الـ env files (شوف القسم اللي تحت)
 
-### Build
+# 3. شغّل قاعدة البيانات
+pnpm db:up
 
-To build all apps and packages, run the following command:
+# 4. اعمل الجداول في الداتابيز
+pnpm --filter server db:push
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+# 5. شغّل المشروع
+pnpm dev
 ```
 
-Without global `turbo`, use your package manager:
+> أمر `pnpm dev` بيشغّل الداتابيز (Docker) أوتوماتيك عبر `predev` في حالة لو كانت مقفولة، لكن لتطبيق الـ schema لأول مرة بـ `db:push` لازم تبدأ الداتابيز أولاً بـ `pnpm db:up`.
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm exec turbo build
-pnpm exec turbo build
+---
+
+## 🔐 Environment Variables
+
+اعمل ملفين وانسخ فيهم القيم دي:
+
+### `apps/server/.env`
+
+```env
+# Server
+PORT=8000
+NODE_ENV=development
+CLIENT_URL=http://localhost:3000
+
+# Database (used by Docker container & Drizzle)
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=anubis
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/anubis
+
+# Better Auth
+BETTER_AUTH_SECRET=change-me-to-a-long-random-string
+BETTER_AUTH_URL=http://localhost:8000
+
+# Cloudinary (لرفع الصور)
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### `apps/client/.env.local`
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-Without global `turbo`:
+> ⚠️ ممنوع نرفع أي `.env` على GitHub. ولو عايز تولّد `BETTER_AUTH_SECRET`:
+> `openssl rand -base64 32`
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+---
+
+## 🛠️ الأوامر
+
+### من الـ root
+
+| الأمر            | الوظيفة                                 |
+| ---------------- | --------------------------------------- |
+| `pnpm dev`       | تشغيل كل المشروع (client + server + DB) |
+| `pnpm build`     | عمل build للمشروع كله                   |
+| `pnpm lint`      | فحص الكود بـ ESLint                     |
+| `pnpm typecheck` | فحص الـ TypeScript                      |
+| `pnpm format`    | تنسيق الكود بـ Prettier                 |
+| `pnpm db:up`     | تشغيل الداتابيز (Docker)                |
+| `pnpm db:down`   | إيقاف الداتابيز                         |
+
+### Server (`pnpm --filter server <command>`)
+
+| الأمر           | الوظيفة                          |
+| --------------- | -------------------------------- |
+| `db:generate`   | توليد migration من الـ schema    |
+| `db:migrate`    | تطبيق الـ migrations             |
+| `db:push`       | رفع الـ schema مباشرة (للتطوير)  |
+| `db:studio`     | فتح Drizzle Studio               |
+| `auth:generate` | توليد auth schema من Better Auth |
+
+### Client
+
+| الأمر                                            | الوظيفة                                                 |
+| ------------------------------------------------ | ------------------------------------------------------- |
+| `pnpm --filter ./apps/client shadcn <component>` | إضافة component جديد من shadcn (يُضاف في `packages/ui`) |
+
+---
+
+## 🐳 Docker
+
+- `docker-compose.dev.yml` → للتطوير (الداتابيز بس).
+- `docker-compose.yml` → للـ production.
+
+---
+
+## 🤝 قبل ما تعمل Commit
+
+```bash
+pnpm lint && pnpm typecheck && pnpm format
 ```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)

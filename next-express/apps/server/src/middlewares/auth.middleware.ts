@@ -14,7 +14,8 @@ export const authMiddleware = async (
   });
 
   if (!session || !session.user) {
-    return error(res, "Unauthorized", 401);
+    error(res, "Unauthorized", null, 401);
+    return;
   }
 
   res.locals.session = session;

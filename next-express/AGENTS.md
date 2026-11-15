@@ -32,6 +32,7 @@ next-express/
 ├── packages/
 │   ├── types/               # @workspace/types      -> shared types & contracts
 │   ├── typescript-config/   # Shared tsconfig bases
+│   ├── ui/                  # @workspace/ui         -> ALL shadcn components live here
 │   └── validation/          # @workspace/validation -> shared zod schemas
 ├── AGENTS.md
 ├── docker-compose.yaml
@@ -42,7 +43,7 @@ next-express/
 └── turbo.json
 ```
 
-2.1 There is **no** shared UI package and **no** shared ESLint config. shadcn lives inside the client app, and linting is done with Oxlint from the root.
+2.1 There is **no** shared ESLint config. Linting is done with Oxlint from the root.
 
 ---
 
@@ -52,10 +53,11 @@ next-express/
 
 - Shared types and contract types -> `@workspace/types` (`packages/types`)
 - Zod schemas -> `@workspace/validation` (`packages/validation`)
+- Shared UI (shadcn) -> `@workspace/ui` (`packages/ui`)
 
 3.2 Never duplicate a type or schema in both apps. If both sides need it, it belongs in a package.
 3.3 When you change a shared contract, update **both** client and server usages in the same task.
-3.4 UI is **not** a shared package. shadcn (with **Base UI**, not Radix UI) lives inside the client app in `components/ui/`. See the client file for details.
+3.4 shadcn is used with **Base UI** (not Radix UI). Every shadcn component is installed into `@workspace/ui`, never directly into an app. See the client file for details.
 3.5 If a needed zod schema does not exist yet, create it in `@workspace/validation`. Never write an inline or local schema.
 
 ---
@@ -91,23 +93,23 @@ next-express/
 
 ## 7. Naming Conventions
 
-| Kind                   | Pattern             | Example                       |
-| ---------------------- | ------------------- | ----------------------------- |
-| Controller             | `xY.controller.ts`  | `getProducts.controller.ts`   |
-| Service                | `xY.service.ts`     | `getProducts.service.ts`      |
-| Query                  | `xY.query.ts`       | `getProducts.query.ts`        |
-| Routes                 | `xY.routes.ts`      | `product.routes.ts`           |
-| Middleware             | `xY.middleware.ts`  | `auth.middleware.ts`          |
-| Utils                  | `xY.ts`             | `formatPrice.ts`              |
-| Request                | `xY.ts`             | `loginWithEmail.ts`           |
-| Types                  | `xY.types.ts`       | `product.types.ts`            |
-| Store                  | `xY.store.ts`       | `cart.store.ts`               |
-| Component              | `XY.tsx`            | `ProductCard.tsx`             |
-| Section                | `XYSection.tsx`     | `ProductListSection.tsx`      |
-| Skeleton               | `XYSkeleton.tsx`    | `ProductListSkeleton.tsx`     |
-| Hook                   | `useXY.ts`          | `useProducts.ts`              |
-| Unit test              | `<source file>.test.ts(x)` | `createOrder.service.test.ts` |
-| Integration test (server) | `<source file>.int.test.ts` | `app.int.test.ts`      |
+| Kind                      | Pattern                     | Example                       |
+| ------------------------- | --------------------------- | ----------------------------- |
+| Controller                | `xY.controller.ts`          | `getProducts.controller.ts`   |
+| Service                   | `xY.service.ts`             | `getProducts.service.ts`      |
+| Query                     | `xY.query.ts`               | `getProducts.query.ts`        |
+| Routes                    | `xY.routes.ts`              | `product.routes.ts`           |
+| Middleware                | `xY.middleware.ts`          | `auth.middleware.ts`          |
+| Utils                     | `xY.ts`                     | `formatPrice.ts`              |
+| Request                   | `xY.ts`                     | `loginWithEmail.ts`           |
+| Types                     | `xY.types.ts`               | `product.types.ts`            |
+| Store                     | `xY.store.ts`               | `cart.store.ts`               |
+| Component                 | `XY.tsx`                    | `ProductCard.tsx`             |
+| Section                   | `XYSection.tsx`             | `ProductListSection.tsx`      |
+| Skeleton                  | `XYSkeleton.tsx`            | `ProductListSkeleton.tsx`     |
+| Hook                      | `useXY.ts`                  | `useProducts.ts`              |
+| Unit test                 | `<source file>.test.ts(x)`  | `createOrder.service.test.ts` |
+| Integration test (server) | `<source file>.int.test.ts` | `app.int.test.ts`             |
 
 (`xY` = camelCase, `XY` = PascalCase.) A test file is named after the file it tests, with `.test.ts` (or `.test.tsx` for components) added.
 
@@ -139,21 +141,21 @@ next-express/
 
 Run commands from the repo root unless stated otherwise. To target one app use a path filter, e.g. `pnpm --filter ./apps/client typecheck` or `pnpm --filter ./apps/server test`. **Lint and format are never per-app: always run them from the root.**
 
-| Command              | What it does                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| `pnpm install`       | Install all workspace dependencies (`prepare` sets up Husky)                         |
-| `pnpm dev`           | Starts the dev DB (`predev` runs `db:up`), then `turbo run dev` for all apps         |
-| `pnpm build`         | `turbo run build` for all workspaces                                                 |
-| `pnpm lint`          | `oxlint --type-aware` on the whole repo (not through turbo)                          |
-| `pnpm lint:fix`      | Same, with `--fix`                                                                   |
-| `pnpm lint:ci`       | Same, with `--deny-warnings` (warnings fail)                                         |
-| `pnpm format`        | `prettier --write .` on the **whole repo**                                           |
-| `pnpm format:check`  | `prettier --check .` (read-only)                                                     |
-| `pnpm typecheck`     | `turbo run typecheck`                                                                |
-| `pnpm test`          | `turbo run test` (client and server tests)                                           |
-| `pnpm test:watch`    | `turbo run test:watch` (long-running)                                                |
-| `pnpm db:up`         | Start the dev Postgres container and wait until it is healthy                        |
-| `pnpm db:down`       | Stop and remove the dev containers                                                   |
+| Command             | What it does                                                                 |
+| ------------------- | ---------------------------------------------------------------------------- |
+| `pnpm install`      | Install all workspace dependencies (`prepare` sets up Husky)                 |
+| `pnpm dev`          | Starts the dev DB (`predev` runs `db:up`), then `turbo run dev` for all apps |
+| `pnpm build`        | `turbo run build` for all workspaces                                         |
+| `pnpm lint`         | `oxlint --type-aware` on the whole repo (not through turbo)                  |
+| `pnpm lint:fix`     | Same, with `--fix`                                                           |
+| `pnpm lint:ci`      | Same, with `--deny-warnings` (warnings fail)                                 |
+| `pnpm format`       | `prettier --write .` on the **whole repo**                                   |
+| `pnpm format:check` | `prettier --check .` (read-only)                                             |
+| `pnpm typecheck`    | `turbo run typecheck`                                                        |
+| `pnpm test`         | `turbo run test` (client and server tests)                                   |
+| `pnpm test:watch`   | `turbo run test:watch` (long-running)                                        |
+| `pnpm db:up`        | Start the dev Postgres container and wait until it is healthy                |
+| `pnpm db:down`      | Stop and remove the dev containers                                           |
 
 10.1 **After finishing any task that changes code, run:** `pnpm lint` (root), `pnpm typecheck` and `pnpm test` (scoped to the changed app when only one app changed). Fix every error and every failing test before reporting the task as done.
 10.2 `pnpm lint:ci` and `pnpm format:check` are the strict, read-only checks meant for CI. Treat lint warnings as errors.
@@ -171,10 +173,10 @@ Run commands from the repo root unless stated otherwise. To target one app use a
 
 ## 11. Adding a New App
 
-11.1 If the owner asks to add another **Next.js** app next to `client` and `server`, build it with **exactly the same architecture, rules, and flow as `apps/client`**: same folder structure, features inside `app/`, pages composing sections, `Suspense` + skeletons, `error.tsx`/`not-found.tsx` per route and at the root, requests layer, `lib/api.ts`, zod + react-hook-form, zustand + immer for client state, caching rules, accessibility rules, shadcn with Base UI in its own `components/ui/`, and the same testing setup (Vitest, `tests/` folders per feature, global `test/` folder).
+11.1 If the owner asks to add another **Next.js** app next to `client` and `server`, build it with **exactly the same architecture, rules, and flow as `apps/client`**: same folder structure, features inside `app/`, pages composing sections, `Suspense` + skeletons, `error.tsx`/`not-found.tsx` per route and at the root, requests layer, `lib/api.ts`, zod + react-hook-form, zustand + immer for client state, caching rules, accessibility rules, shadcn components from `@workspace/ui` (Base UI), and the same testing setup (Vitest, `tests/` folders per feature, global `test/` folder).
 11.2 Create it at `apps/<app-name>/`. Copy `apps/client/AGENTS.md` into `apps/<app-name>/AGENTS.md` (change only the app name) so the rules stay identical. Future rule changes to the client file must be mirrored in the copies.
-11.3 Use the same scripts as the client (`dev`, `build`, `start`, `typecheck`, `test`, `test:watch`, `shadcn`) so `turbo run` picks the app up. Lint and format come from the root (no per-app lint script). Use the same shared config (`@workspace/typescript-config`) and the same workspace dependencies (`@workspace/validation`, `@workspace/types`). Give it its own unique dev port.
-11.4 Reuse the shared packages (types, schemas). Do not copy shared code into the new app. shadcn components are per app, so the new app gets its own `components.json` and `components/ui/` folder. If the owner wants UI shared between apps, notify them first.
+11.3 Use the same scripts as the client (`dev`, `build`, `start`, `typecheck`, `test`, `test:watch`, `shadcn`) so `turbo run` picks the app up. Lint and format come from the root (no per-app lint script). Use the same shared config (`@workspace/typescript-config`) and the same workspace dependencies (`@workspace/ui`, `@workspace/validation`, `@workspace/types`). Give it its own unique dev port.
+11.4 Reuse the shared packages (types, schemas, UI). Do not copy shared code into the new app. Never install shadcn components inside the new app: they go into `@workspace/ui`, like in the client. Give the new app a `components.json` configured like the client's so the shadcn CLI installs into `packages/ui`.
 11.5 If the new app talks to `apps/server`, **notify the owner before starting**: the server's CORS (`CLIENT_URL`) and the better-auth trusted origins currently serve a single client and must be updated.
 11.6 Also update what is needed for it to run with the repo: `turbo.json` if required, `Dockerfile`, and the `docker-compose` files. Ask the owner if unsure.
 11.7 For any other kind of app (not Next.js), notify the owner before starting.

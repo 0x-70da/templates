@@ -327,21 +327,21 @@ function attachUserToRequest(req: Request, session: unknown): void {
 
 Run from `apps/server`, or from the repo root with `pnpm --filter ./apps/server <script>`. Lint and format are not scripts of this app: run `pnpm lint` and `pnpm format` from the **repo root**.
 
-| Command                | What it does                                                                 |
-| ---------------------- | ---------------------------------------------------------------------------- |
-| `pnpm dev`             | `tsx watch src/server.ts` (long-running)                                     |
-| `pnpm build`           | `tsup` (outputs to `dist/`)                                                  |
-| `pnpm start`           | `node dist/server.js` (needs a build first)                                  |
-| `pnpm typecheck`       | `tsc --noEmit`                                                               |
-| `pnpm test`            | `vitest run`: all tests (unit + integration)                                 |
-| `pnpm test:unit`       | `vitest run --project unit`                                                  |
-| `pnpm test:int`        | `vitest run --project integration` (needs the database)                      |
-| `pnpm test:watch`      | `vitest --project unit` (long-running)                                       |
-| `pnpm db:generate`     | `drizzle-kit generate`: create a migration from schema changes               |
-| `pnpm db:migrate`      | `drizzle-kit migrate`: apply migrations to the database                      |
-| `pnpm db:push`         | `drizzle-kit push`: sync the schema directly, without migration files        |
-| `pnpm db:studio`       | `drizzle-kit studio`: opens the Drizzle Studio UI (long-running)             |
-| `pnpm auth:generate`   | Regenerate `src/db/auth-schema.ts` from `src/lib/auth.ts`                    |
+| Command              | What it does                                                          |
+| -------------------- | --------------------------------------------------------------------- |
+| `pnpm dev`           | `tsx watch src/server.ts` (long-running)                              |
+| `pnpm build`         | `tsup` (outputs to `dist/`)                                           |
+| `pnpm start`         | `node dist/server.js` (needs a build first)                           |
+| `pnpm typecheck`     | `tsc --noEmit`                                                        |
+| `pnpm test`          | `vitest run`: all tests (unit + integration)                          |
+| `pnpm test:unit`     | `vitest run --project unit`                                           |
+| `pnpm test:int`      | `vitest run --project integration` (needs the database)               |
+| `pnpm test:watch`    | `vitest --project unit` (long-running)                                |
+| `pnpm db:generate`   | `drizzle-kit generate`: create a migration from schema changes        |
+| `pnpm db:migrate`    | `drizzle-kit migrate`: apply migrations to the database               |
+| `pnpm db:push`       | `drizzle-kit push`: sync the schema directly, without migration files |
+| `pnpm db:studio`     | `drizzle-kit studio`: opens the Drizzle Studio UI (long-running)      |
+| `pnpm auth:generate` | Regenerate `src/db/auth-schema.ts` from `src/lib/auth.ts`             |
 
 13.1 After any server change run, in this order: `pnpm lint` (from the repo root), `pnpm typecheck`, and the tests (see 13.8). Fix every error.
 13.2 Run `pnpm build` when the change affects configs (`tsup.config.ts`, `tsconfig.json`), dependencies, or the project structure, or when asked.
@@ -426,6 +426,7 @@ function calculateOrderTotal(products: Product[], input: CreateOrderInput): numb
 16.2 **Feature unit tests** live in the feature's single `tests/` folder (`features/<feature>/tests/`). Name each file after the file it tests: `createOrder.service.ts` -> `createOrder.service.test.ts`. **One test file per unit** (per controller, service, util, middleware), not one big file.
 16.3 **The global folder `src/test/`** holds the global setup (`global-setup.ts`, `setup.ts`) and shared test helpers. Read these files before writing tests and do not change them without notifying the owner. Put tests for shared root-level code (root `queries/`, `services/`) here as well. Do not put feature tests here.
 16.4 What to unit test:
+
 - **Services:** mock the queries (`vi.mock`) and test the behavior through the exported service function: the success path, every business-rule failure, and the `AppError` thrown. Do not test private helpers directly.
 - **Controllers:** mock the service. Check zod validation failures, the status code, and the response shape produced through `lib/response.ts`.
 - **Utils:** pure input/output tests, including edge cases.

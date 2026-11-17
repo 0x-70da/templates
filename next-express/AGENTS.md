@@ -17,7 +17,7 @@ Read this file first, then the file of the app you are working in. If rules conf
 1.1 Follow the instructions in these files strictly.
 1.2 Never guess when something is unclear. Ask first.
 1.3 If there is any conflict, question, or anything related that affects the task, **notify the owner before starting work**.
-1.4 Put the right file in the right location with the right name. Example: `ProductCard.tsx` goes in `app/products/components/ProductCard.tsx`; if it is used by more than 2 features, it goes in the root-level `components/products/ProductCard.tsx`.
+1.4 Put the right file in the right location with the right name. Example: `ProductCard.tsx` goes in `components/products/ProductCard.tsx` (client), and `createProduct.service.ts` goes in `services/products/createProduct.service.ts` (server).
 1.5 Do not take shortcuts that skip a rule (e.g. "simpler" state, validation, or file layout). If a rule seems wrong for the task, notify the owner instead of ignoring it.
 
 ---
@@ -67,7 +67,7 @@ next-express/
 4.1 **Never use `any`.** Use proper types, generics, or `unknown` with narrowing.
 4.2 Generic helper functions (`apps/client/lib/api.ts`, `apps/server/src/lib/response.ts`) require you to pass the proper type. Never leave them untyped.
 4.3 Props types of a component live in the same file as the component, not in a separate file.
-4.4 Shared types go to `@workspace/types`; app-only types go in the feature's types location (see each app's file).
+4.4 Shared types go to `@workspace/types`; app-only types go in the app's own `types/` folder (see each app's file).
 
 ---
 
@@ -115,13 +115,14 @@ next-express/
 
 ---
 
-## 8. Feature-Based Organization (Both Apps)
+## 8. Organization (Both Apps)
 
-8.1 Both apps are organized **by feature**. Everything that belongs to a feature lives inside that feature's folder.
-8.2 Anything (query, service, util, component, hook, request, store, type) used by **more than 2 features** moves to the proper root-level folder outside the feature folders.
-8.3 Details per app are in the client and server files.
-8.4 **One unit per file.** Never put several controllers, services, queries, requests, or utils in a single file. Each file holds one main exported function (private helpers used only by it stay at the bottom of the same file). The folder holds many small files, not one big file.
-8.5 Each feature has **exactly one** `controllers/`, one `services/`, one `queries/`, and one `utils/` folder (server), and each of these folders contains one file per unit. Do not create duplicate, nested, or per-entity folders for them.
+8.1 There is **no `features/` system**. Both apps are organized **by kind of file** (controllers, services, components, requests, etc.) at the root of the source folder, with **domain sub-folders** inside the folders that hold many files.
+8.2 **Server:** `controllers/`, `services/`, `queries/` (and `utils/` when needed) each contain one sub-folder per domain (e.g. `controllers/products/`). Routes are in `routes/`, tests in `tests/`.
+8.3 **Client:** route folders in `app/` contain only `page.tsx`, `layout.tsx`, `error.tsx`, `not-found.tsx`, and a `sections/` folder. Everything else lives in root-level folders: `components/<domain>/`, `requests/<domain>/`, `stores/<domain>/`, `utils/<domain>/`, and the flat `hooks/`, `types/`, `constants/`.
+8.4 Use the **same domain name everywhere** (for example `products` in `controllers/products`, `services/products`, `queries/products`, `routes/products.routes.ts`, and in the client in `components/products`, `requests/products`).
+8.5 **One unit per file.** Never put several controllers, services, queries, requests, or utils in a single file. Each file holds one main exported function (private helpers used only by it stay at the bottom of the same file). The folder holds many small files, not one big file.
+8.6 Never create extra top-level or duplicate folders for these kinds of files. Details per app are in the client and server files.
 
 ---
 
@@ -173,7 +174,7 @@ Run commands from the repo root unless stated otherwise. To target one app use a
 
 ## 11. Adding a New App
 
-11.1 If the owner asks to add another **Next.js** app next to `client` and `server`, build it with **exactly the same architecture, rules, and flow as `apps/client`**: same folder structure, features inside `app/`, pages composing sections, `Suspense` + skeletons, `error.tsx`/`not-found.tsx` per route and at the root, requests layer, `lib/api.ts`, zod + react-hook-form, zustand + immer for client state, caching rules, accessibility rules, shadcn components from `@workspace/ui` (Base UI), and the same testing setup (Vitest, `tests/` folders per feature, global `test/` folder).
+11.1 If the owner asks to add another **Next.js** app next to `client` and `server`, build it with **exactly the same architecture, rules, and flow as `apps/client`**: same folder structure (route folders with only `sections/` inside, everything else in root-level domain folders), pages composing sections, `Suspense` + skeletons, `error.tsx`/`not-found.tsx` per route and at the root, requests layer, `lib/api.ts`, zod + react-hook-form, zustand + immer for client state, caching rules, accessibility rules, shadcn components from `@workspace/ui` (Base UI), and the same testing setup (Vitest, tests in the `test/` folder).
 11.2 Create it at `apps/<app-name>/`. Copy `apps/client/AGENTS.md` into `apps/<app-name>/AGENTS.md` (change only the app name) so the rules stay identical. Future rule changes to the client file must be mirrored in the copies.
 11.3 Use the same scripts as the client (`dev`, `build`, `start`, `typecheck`, `test`, `test:watch`, `shadcn`) so `turbo run` picks the app up. Lint and format come from the root (no per-app lint script). Use the same shared config (`@workspace/typescript-config`) and the same workspace dependencies (`@workspace/ui`, `@workspace/validation`, `@workspace/types`). Give it its own unique dev port.
 11.4 Reuse the shared packages (types, schemas, UI). Do not copy shared code into the new app. Never install shadcn components inside the new app: they go into `@workspace/ui`, like in the client. Give the new app a `components.json` configured like the client's so the shadcn CLI installs into `packages/ui`.
@@ -190,18 +191,19 @@ Before saying a task is finished, verify every item. These are the rules agents 
 12.1 Forms: every form uses `react-hook-form` + `zodResolver` with a schema from `@workspace/validation`. No `useState` for fields, no manual `if/else` validation.
 12.2 Client state: zustand + immer only. No `createContext` / `useContext` for state.
 12.3 Auth and API calls on the client are inside `requests/` functions, one function per file.
-12.4 Server: one controller, one service, one query, one util per file, inside the feature's single `controllers/`, `services/`, `queries/`, `utils/` folders.
+12.4 Server: one controller, one service, one query, one util per file, inside the matching domain sub-folder (`controllers/<domain>/`, `services/<domain>/`, `queries/<domain>/`, `utils/<domain>/`).
 12.5 Server services: no spaghetti code. Each piece of logic is its own helper function below the main service function, in the same file. Auth logic is isolated the same way.
 12.6 No `any`, no raw `fetch`, no raw `res.json`, no default `Error` on the server, no `img` tags, no ESLint leftovers.
-12.7 Tests: new or changed logic has new or updated tests in the feature's `tests/` folder (section 13), and no test was skipped or deleted to make things pass.
+12.7 Tests: new or changed logic has new or updated tests in the app's test folder (`test/` in the client, `src/tests/` in the server, section 13), and no test was skipped or deleted to make things pass.
 12.8 Files are in the right place with the right names (section 7), and `pnpm lint`, `pnpm typecheck`, and `pnpm test` pass (section 10).
+12.9 Client: route folders contain only `page.tsx`, `layout.tsx`, `error.tsx`, `not-found.tsx`, and `sections/`. Components, requests, stores, utils, hooks, and types are in the root-level folders.
 
 ---
 
 ## 13. Testing (Global Rules)
 
 13.1 Both apps use **Vitest**. The server also uses **supertest**; the client uses **Testing Library** (jsdom).
-13.2 **Every feature has one `tests/` folder** (`<feature>/tests/`) holding the unit tests of that feature. **Every app has one global test folder at its root** (`test/` in the client, `src/test/` in the server) for global setup, shared test helpers, and tests of shared root-level code.
+13.2 **Every app has one test folder**: `test/` in the client and `src/tests/` in the server. It holds the global setup and shared test helpers, and all the unit tests, organized in one sub-folder per domain (e.g. `tests/products/`) that mirrors the source folders.
 13.3 **Tests are part of the task.** New or changed logic ships with new or updated tests in the same task. A feature without tests is not done.
 13.4 One test file per unit under test, named after the file it tests (section 7). Do not group the tests of several units in one file.
 13.5 **Never delete, skip (`it.skip`), or weaken a test to make it pass**, and never leave `.only` in the code. Fix the code, or notify the owner if the test contradicts a rule.

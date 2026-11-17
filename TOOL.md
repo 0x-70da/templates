@@ -6,12 +6,15 @@ function new-project {
     $repo      = "gh:0x-70da/templates"
 
     $templates = [ordered]@{
-        "1" = @{ Label = "React";           Dir = "react" }
-        "2" = @{ Label = "Next.js";         Dir = "next" }
+        "1" = @{ Label = "React Only (SPA)";           Dir = "react" }
+        "2" = @{ Label = "Next.js Only";         Dir = "next" }
         "3" = @{ Label = "Express";         Dir = "express" }
-        "4" = @{ Label = "React + Express"; Dir = "react-express" }
-        "5" = @{ Label = "Expo-go";         Dir = "expo-go"}
-        "6" = @{ Label = "Next + Express";  Dir = "next-express"}
+        "4" = @{ Label = "React (Vite) (SPA) + Express"; Dir = "react-express" }
+        "5" = @{ Label = "React (Router) + Express"; Dir = "react-router-express" }
+        "6" = @{ Label = "Expo-go";         Dir = "expo-go"}
+        "7" = @{ Label = "Expo-eas";         Dir = "expo-eas"}
+        "8" = @{ Label = "Next + Express (Monolength)";  Dir = "next-express-mono"}
+        "9" = @{ Label = "Next + Express (microservices)";  Dir = "next-express-micro"}
     }
 
     if (-not $Name) { $Name = Read-Host "Project name" }

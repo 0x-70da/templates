@@ -5,16 +5,21 @@ function new-project {
     $workspace = "E:\Workspace"
     $repo      = "gh:0x-70da/templates"
 
-    $templates = [ordered]@{
-        "1" = @{ Label = "React Only (SPA)";           Dir = "react" }
-        "2" = @{ Label = "Next.js Only";         Dir = "next" }
-        "3" = @{ Label = "Express";         Dir = "express" }
-        "4" = @{ Label = "React (Vite) (SPA) + Express"; Dir = "react-express" }
-        "5" = @{ Label = "React (Router) + Express"; Dir = "react-router-express" }
-        "6" = @{ Label = "Expo-go";         Dir = "expo-go"}
-        "7" = @{ Label = "Expo-eas";         Dir = "expo-eas"}
-        "8" = @{ Label = "Next + Express (Monolength)";  Dir = "next-express-mono"}
-        "9" = @{ Label = "Next + Express (microservices)";  Dir = "next-express-micro"}
+      $templates = [ordered]@{
+      "1"  = @{ Label = "React Only (SPA)";                          Dir = "react" }
+      "2"  = @{ Label = "Next.js Only";                              Dir = "next" }
+      "3"  = @{ Label = "Express";                                   Dir = "express" }
+      "4"  = @{ Label = "React (Vite) (SPA) + Express (Monorepo)";   Dir = "react-express" }
+      "5"  = @{ Label = "React Router + Express (Monorepo)";         Dir = "react-router-express" }
+      "6"  = @{ Label = "Expo Go";                                   Dir = "expo-go" }
+      "7"  = @{ Label = "Expo EAS";                                  Dir = "expo-eas" }
+      "8"  = @{ Label = "Next + Express (Monorepo)";                 Dir = "next-express" }
+      "9"  = @{ Label = "Next + Express (Microservices)";            Dir = "next-express-micro" }
+      "10" = @{ Label = "Next + Express (Microservices, tRPC)";      Dir = "next-express-micro-trpc" }
+      "11" = @{ Label = "Next + Express (Monorepo, GraphQL)";        Dir = "next-express-mono-graphql" }
+      "12" = @{ Label = "Next + Express (Microservices, GraphQL)";   Dir = "next-express-micro-graphql" }
+      "13" = @{ Label = "Next + NestJS (Monorepo)";                  Dir = "next-nest-mono" }
+      "14" = @{ Label = "Next + NestJS (Microservices)";             Dir = "next-nest-micro" }
     }
 
     if (-not $Name) { $Name = Read-Host "Project name" }

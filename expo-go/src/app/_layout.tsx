@@ -6,7 +6,7 @@ import { AnimatedSplashOverlay } from "@/components/animated-icon";
 import AppTabs from "@/components/app-tabs";
 import migrations from "../../db/migrations/migrations";
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 import "../global.css";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
@@ -19,7 +19,7 @@ export default function TabLayout() {
 
   useEffect(() => {
     if (!error) return;
-    SplashScreen.hideAsync();
+    void SplashScreen.hideAsync();
     console.error("DB migration failed:", error);
     // Sentry.captureException(error);
   }, [error]);
@@ -31,8 +31,7 @@ export default function TabLayout() {
           There was an error while preparing the database
         </Text>
         <Text className="text-center text-neutral-500">
-          Please try closing and reopening the app. If the problem persists,
-          contact support.
+          Please try closing and reopening the app. If the problem persists, contact support.
         </Text>
         {__DEV__ && <Text className="text-red-500">{error.message}</Text>}
       </View>

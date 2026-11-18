@@ -1,41 +1,92 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# AGENTS.md (Expo Mobile App)
 
-## Expo has changed — do not trust your training data
+This is an **Expo Go / React Native** mobile application template built with Expo SDK 57, Expo Router, NativeWind, and local SQLite with Drizzle ORM.
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+---
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+## 1. Working Agreement
 
-## Commands
+1.1 Follow the instructions in this file strictly.
+1.2 Never guess when something is unclear. Ask first.
+1.3 Put the right file in the right location with the right name.
+1.4 Always run `pnpm typecheck`, `pnpm lint:ci`, and `pnpm test` before declaring work done.
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+---
 
-```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+## 2. Project Structure
+
+```
+expo-go/
+├── assets/                 # App icons, splash screens, assets
+├── db/                     # Drizzle ORM + expo-sqlite schemas and migrations
+│   ├── schema.ts           # SQLite table definitions
+│   ├── relations.ts        # Table relations
+│   └── index.ts            # expo-sqlite database instance
+├── src/
+│   ├── app/                # Expo Router screens and layout navigators
+│   ├── components/         # Reusable mobile UI components
+│   ├── constants/          # Theme constants and tokens
+│   ├── hooks/              # Custom React hooks
+│   ├── stores/             # Zustand + Immer global stores
+│   ├── types/              # Domain TypeScript types
+│   ├── validation/         # Zod schemas for input validation
+│   └── global.css          # NativeWind CSS entry point
+├── test/                   # Jest + testing-library tests
+├── app.json                # Expo application config
+├── babel.config.js         # Babel presets and plugins
+├── drizzle.config.ts       # Drizzle Kit SQLite configuration
+├── metro.config.js         # Metro bundler config
+├── package.json
+└── tsconfig.json
 ```
 
-Run lint and typecheck before declaring any task done.
+---
 
-## Navigation & Routing
+## 3. Expo Router & Mobile Rules
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+3.1 Use **Expo Router** for all screen navigation. Every file in `src/app/` represents a route.
+3.2 Navigators are defined in `_layout.tsx` files. Keep non-screen logic outside `src/app/`.
+3.3 Use `Link` from `expo-router` for declarative navigation and `router` for imperative navigation.
+3.4 If `ios/` and `android/` folders are not present, do not create them manually. Expo uses Continuous Native Generation (CNG).
 
-## Building with EAS
+---
 
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
+## 4. State, Forms & Validation
 
-## Rules
+4.1 Global client state uses **Zustand + Immer** located in `src/stores/<domain>/<name>.store.ts`.
+4.2 Form management uses **React Hook Form** paired with `@hookform/resolvers/zod`.
+4.3 Input validation schemas are defined with **Zod** in `src/validation/<domain>.validation.ts`. Never use manual `if/else` checks where Zod can validate.
 
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+---
+
+## 5. Local Database (Drizzle + SQLite)
+
+5.1 Local persistence uses `expo-sqlite` powered by **Drizzle ORM**.
+5.2 Tables are defined in `db/schema.ts` using `sqliteTable`.
+5.3 Run `pnpm db:generate` to generate migration files.
+
+---
+
+## 6. Code Quality & Standards
+
+6.1 **Never use `any`.** Use precise types, generics, or `unknown` with narrowing.
+6.2 Single-responsibility functions only. Keep screen components clean by extracting sub-components and hooks.
+6.3 Code quality is verified using **Oxlint** (`pnpm lint:ci`) and **Prettier** (`pnpm format:check`).
+
+---
+
+## 7. Testing
+
+7.1 Mobile tests use **Jest** with `jest-expo` preset and `@testing-library/react-native`.
+7.2 Test files live under `test/` following the `<source>.test.tsx` naming convention.
+7.3 Run unit tests with `pnpm test`.
+
+---
+
+## 8. Deviations from next-express
+
+8.1 **Platform**: Built for mobile (iOS & Android via Expo SDK 57 / React Native 0.86) rather than web/Node.js.
+8.2 **Routing**: Uses **Expo Router** file-system routing designed for mobile tab/stack navigators.
+8.3 **UI**: Uses React Native primitives (`View`, `Text`, `Pressable`, `StyleSheet`) and NativeWind instead of DOM/Base UI elements.
+8.4 **Database**: Uses local embedded SQLite (`expo-sqlite`) instead of a PostgreSQL server container.
+8.5 **Test Runner**: Uses **Jest** + `jest-expo` instead of Vitest due to React Native native runtime bridge requirements.

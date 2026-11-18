@@ -1,0 +1,73 @@
+{
+  "name": "server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsup",
+    "start": "node dist/server.js",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "lint:ci": "oxlint --type-aware --deny-warnings",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --project unit",
+    "test:unit": "vitest run --project unit",
+    "test:int": "vitest run --project integration",
+    "test:watch": "vitest --project unit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "auth:generate": "pnpm dlx auth generate --config src/lib/auth.ts --output src/db/auth-schema.ts -y",
+    "prepare": "husky || true"
+  },
+  "lint-staged": {
+    "*.{ts,js,mjs,cjs}": [
+      "oxlint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": "prettier --write"
+  },
+  "dependencies": {
+    "better-auth": "^1.7.7",
+    "cors": "^2.8.6",
+    "dataloader": "^2.2.3",
+    "dotenv": "^18.0.7",
+    "drizzle-orm": "1.0.0-rc.4",
+    "express": "^5.3.0",
+    "graphql": "^16.10.0",
+    "graphql-yoga": "^6.1.0",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24",
+    "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
+    "drizzle-kit": "1.0.0-rc.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "oxlint": "^1.93.0",
+    "oxlint-tsgolint": "^7.0.2007",
+    "prettier": "3.9.6",
+    "supertest": "^7.3.2",
+    "tsup": "^9.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": ">=24"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

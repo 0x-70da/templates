@@ -1,0 +1,9 @@
+type Test {
+  id: ID!
+  test: String!
+}
+
+type Query {
+  getTest(id: ID!): Test
+  health: String!
+}

@@ -1,17 +1,26 @@
-import { ErrorRequestHandler } from "express";
-import { error } from "../lib/response.js";
+import type { ErrorRequestHandler, NextFunction, Request, Response } from "express";
+import { error } from "@/lib/response";
 import { APIError as AuthError } from "better-auth/api";
 import { DrizzleQueryError } from "drizzle-orm";
+import { AppError } from "@/lib/errors";
 
-export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (
+  err: Error,
+  _req: Request,
+  res: Response,
+  _next: NextFunction,
+) => {
   if (err instanceof AuthError) {
-    return error(res, err.message, err.statusCode);
+    return error(res, err.message, err, err.statusCode);
   }
 
   if (err instanceof DrizzleQueryError) {
-    console.log(err.cause);
-    return error(res, "Database Error", 500);
+    return error(res, "Database Error", err, 500);
   }
 
-  return error(res, "Internal Server Error", 500);
+  if (err instanceof AppError) {
+    return error(res, err.message, err.error, err.statusCode);
+  }
+
+  return error(res, err.message, err, 500);
 };

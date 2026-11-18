@@ -1,14 +1,15 @@
-import { Response } from "express";
+import type { Response } from "express";
 
-export function success(res: Response, data: unknown, status = 200) {
+export function success<T = unknown>(res: Response, message?: string, data?: T, status = 200) {
   return res.status(status).json({
     success: true,
+    message,
     data,
   });
 }
 
-export function error(res: Response, message: string, status = 500) {
-  console.log(`Error: ${message}, Status: ${status}`);
+export function error(res: Response, message: string, err?: unknown, status = 500) {
+  console.error(`Error: ${err instanceof Error ? err.message : String(err)}, Status: ${status}`);
   return res.status(status).json({
     success: false,
     message,

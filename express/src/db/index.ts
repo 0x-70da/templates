@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { relations } from "./relations.js";
+import { relations } from "./relations";
 
 const globalForDb = globalThis as unknown as { pgPool?: Pool };
 

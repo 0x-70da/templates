@@ -1,0 +1,23 @@
+import { auth } from "@/lib/auth";
+import { error } from "@/lib/response";
+import type { Session } from "@/types/auth.types";
+import { fromNodeHeaders } from "better-auth/node";
+import type { NextFunction, Request, Response } from "express";
+
+export const authMiddleware = async (
+  req: Request,
+  res: Response<{}, { session: Session }>,
+  next: NextFunction,
+) => {
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+
+  if (!session || !session.user) {
+    error(res, "Unauthorized", null, 401);
+    return;
+  }
+
+  res.locals.session = session;
+  next();
+};

@@ -1,47 +1,49 @@
 {
   "name": "next-express-micro",
-  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "version": "0.0.0",
   "scripts": {
-    "dev": "concurrently \"pnpm --dir server dev\" \"pnpm --dir client dev\"",
-    "build": "pnpm --dir server build && pnpm --dir client build",
-    "start": "concurrently \"pnpm --dir server start\" \"pnpm --dir client start\"",
-    "lint": "pnpm --dir server lint && pnpm --dir client lint",
-    "lint:fix": "pnpm --dir server lint:fix && pnpm --dir client lint:fix",
-    "lint:ci": "pnpm --dir server lint:ci && pnpm --dir client lint:ci",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "lint:ci": "oxlint --type-aware --deny-warnings",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "pnpm --dir server typecheck && pnpm --dir client typecheck",
-    "test": "pnpm --dir server test && pnpm --dir client test && pnpm test:contract",
-    "test:contract": "tsx scripts/check-contracts.ts",
-    "docker:up": "docker compose up --build",
-    "docker:down": "docker compose down",
-    "docker:dev": "docker compose -f docker-compose.dev.yaml up -d",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "db:up": "docker compose -f docker-compose.dev.yaml up -d --wait db",
+    "db:down": "docker compose -f docker-compose.dev.yaml down",
+    "infra:up": "docker compose -f docker-compose.dev.yaml up -d --wait db redis && tsx scripts/ensure-databases.ts",
+    "infra:down": "docker compose -f docker-compose.dev.yaml down",
+    "gen:service": "turbo gen service",
+    "predev": "pnpm infra:up",
     "prepare": "husky || true"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "oxlint --fix",
       "prettier --write"
     ],
     "*.{json,md,css,yml,yaml}": "prettier --write"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
+    "oxlint": "^1.93.0",
+    "oxlint-tsgolint": "^7.0.2007",
     "prettier": "3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "tsx": "^4.23.15",
-    "typescript": "7.0.2"
+    "pg": "^8.23.1",
+    "@turbo/gen": "^2.11.13",
+    "turbo": "^2.11.10",
+    "typescript": "7.0.2",
+    "tsx": "^4.23.15"
   },
   "packageManager": "pnpm@12.4.2",
   "engines": {
     "node": ">=24"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }

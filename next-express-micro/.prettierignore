@@ -1,8 +1,10 @@
 node_modules
 .next
+.turbo
 dist
 build
-.turbo
+coverage
+pnpm-lock.yaml
+**/src/db/migrations
 *.tsbuildinfo
 next-env.d.ts
-pnpm-lock.yaml

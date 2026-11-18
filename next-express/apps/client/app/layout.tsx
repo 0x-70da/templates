@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Roboto, Noto_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/helper-components/ThemeProvider";
 import NextTopLoader from "nextjs-toploader";
-import { cn } from "@/lib/utils";
+import { cn } from "@workspace/ui/lib/utils";
 
 const notoSansHeading = Noto_Sans({
   subsets: ["latin"],

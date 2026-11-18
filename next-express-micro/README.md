@@ -1,63 +1,86 @@
-# Next.js + Express Microservices Template
+# next-express-micro
 
-An enterprise microservices template featuring an independent **Next.js 16** frontend and an independent **Express 5** REST API backend in a unified repository with Docker Compose orchestration and automated contract drift checking.
+Production-minded Express microservices template for Docker on a VPS.
 
 ## Architecture
 
-- **Independent Services**: `client/` and `server/` have separate `package.json` files, dependencies, build processes, and Dockerfiles.
-- **Contract Sharing with Zero Drift**: Shared types and Zod schemas live in `client/contracts` and `server/src/contracts`, checked by `pnpm test:contract`.
-- **Health Checks & Resilience**: Express `/health` pings PostgreSQL; Next.js `/api/health` validates frontend readiness; Docker Compose sequences container startup via health checks.
-- **Graceful Shutdown**: Server cleanly closes HTTP connections and the PostgreSQL pool on termination signals (`SIGTERM`, `SIGINT`).
-- **Modern UI & Backend**: Next.js 16 (App Router, React 19, Tailwind CSS v4, Base UI), Express 5 (Drizzle ORM v1, PostgreSQL, Better Auth).
+```mermaid
+flowchart LR
+  Client[Next.js client] --> Gateway[Gateway :4000]
+  Gateway --> Auth[Auth service :4001]
+  Gateway --> Test[Test service :4002]
+  Auth --> AuthDB[(Auth database)]
+  Test --> TestDB[(Test database)]
+  Auth --> Redis[(Redis)]
+  Test --> Redis
+```
 
-## Quick Start
+The gateway is the only public API entry point. It strips spoofable identity
+headers, verifies bearer JWTs or exchanges web cookies for a short-lived JWT,
+then adds `x-user-id`, `x-user-role`, and `x-internal-secret` for the target
+service. Services trust only the internal secret and never verify JWTs.
 
-### 1. Development (Concurrent)
+Each service owns its Drizzle schema, migrations, and database. Shared runtime
+code is in `packages/service-kit`; cross-service contracts are in
+`packages/types` and `packages/validation`.
+
+## Quick start
 
 ```bash
-# Install dependencies in both services
-cd server && pnpm install
-cd ../client && pnpm install
-cd .. && pnpm install
-
-# Start development database
-pnpm docker:dev
-
-# Start both services concurrently
+pnpm install
+pnpm infra:up
+pnpm --filter auth-service db:generate
+pnpm --filter test-service db:generate
 pnpm dev
 ```
 
-Frontend runs on `http://localhost:3000` and backend runs on `http://localhost:5000`.
+Copy each `apps/*/.env.example` to `.env` and set one shared
+`INTERNAL_SECRET`. The Next rewrite uses `GATEWAY_URL` at build time, so the
+client Dockerfile passes it as a build argument.
 
-### 2. Standalone Development
-
-You can work on either service independently:
+## Adding a service
 
 ```bash
-# Server only
-cd server
-pnpm dev
-
-# Client only
-cd client
+pnpm gen:service
+pnpm install
+pnpm infra:up
+pnpm --filter <name>-service db:generate
 pnpm dev
 ```
 
-### 3. Verification & Contract Testing
+The generator creates the standard controllers/services/queries/routes/tests
+layout and updates the gateway registry and compose file. If the service
+publishes or consumes events, add the event to `EventMap`, `eventSubscribers`,
+and `eventSchemas`. Keep event handlers idempotent.
 
-```bash
-# Run contract drift check
-pnpm test:contract
+## Events
 
-# Run all quality checks across services
-pnpm lint:ci
-pnpm typecheck
-pnpm test
-pnpm build
-```
+BullMQ uses one queue per subscribing service (`events.<service>`), so events
+remain queued while a subscriber is down. Jobs retry five times with
+exponential backoff. Completed jobs are bounded; failed jobs are retained as
+dead letters and can be inspected with BullMQ tools or Redis queue commands.
 
-### 4. Production Docker Deployment
+## Non-web clients
 
-```bash
-pnpm docker:up
-```
+Sign in through `/api/auth/*`, obtain a JWT from `/api/auth/token`, then call
+the gateway with `Authorization: Bearer <token>`. JWTs expire according to
+`JWT_EXPIRES_IN` and are not immediately revocable. Web cookie exchanges are
+cached only for `COOKIE_EXCHANGE_CACHE_TTL_MS`.
+
+## Environment
+
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `INTERNAL_SECRET` | gateway/services | Private service authentication |
+| `DATABASE_URL` | each service | Service-owned PostgreSQL database |
+| `REDIS_URL` | gateway/event services | Redis connection |
+| `AUTH_SERVICE_URL`, `TEST_SERVICE_URL` | gateway | Internal service URLs |
+| `JWT_ISSUER`, `JWT_AUDIENCE`, `JWKS_URL` | gateway/auth | JWT verification |
+| `BETTER_AUTH_URL`, `TRUSTED_ORIGINS` | auth | Public auth origin |
+
+## Intentionally not included
+
+- Kubernetes, service discovery, and API versioning
+- Distributed tracing and an outbox pattern
+- GraphQL or a true pub/sub broker
+- Immediate JWT revocation

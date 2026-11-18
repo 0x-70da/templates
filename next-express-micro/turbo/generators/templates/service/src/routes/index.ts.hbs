@@ -1,0 +1,4 @@
+import { Router } from "express"; import { requireAuth } from "@workspace/service-kit"; import
+domainRouter from "./{{kebabCase name}}.routes.js"; const router: Router = Router(); router.use("/{{kebabCase
+  name
+}}", requireAuth, domainRouter); export default router;

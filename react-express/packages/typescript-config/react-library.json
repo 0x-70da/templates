@@ -1,13 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./base.json",
-
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "lib": ["ES2024", "DOM", "DOM.Iterable"],
-
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "strict": true
+    "jsx": "react-jsx",
+    "noEmit": true
   }
 }

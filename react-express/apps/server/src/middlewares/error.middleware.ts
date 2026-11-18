@@ -1,8 +1,8 @@
-import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
-import { error } from "../lib/response.js";
+import type { ErrorRequestHandler, NextFunction, Request, Response } from "express";
+import { error } from "@/lib/response";
 import { APIError as AuthError } from "better-auth/api";
 import { DrizzleQueryError } from "drizzle-orm";
-import { AppError } from "@/lib/errors.js";
+import { AppError } from "@/lib/errors";
 
 export const errorHandler: ErrorRequestHandler = (
   err: Error,

@@ -1,8 +1,8 @@
-import { auth } from "@/lib/auth.js";
-import { error } from "@/lib/response.js";
-import { Session } from "@/types/auth.types.js";
+import { auth } from "@/lib/auth";
+import { error } from "@/lib/response";
+import type { Session } from "@/types/auth.types";
 import { fromNodeHeaders } from "better-auth/node";
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
 export const authMiddleware = async (
   req: Request,
@@ -14,7 +14,8 @@ export const authMiddleware = async (
   });
 
   if (!session || !session.user) {
-    return error(res, "Unauthorized", 401);
+    error(res, "Unauthorized", null, 401);
+    return;
   }
 
   res.locals.session = session;

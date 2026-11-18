@@ -2,20 +2,21 @@
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
   "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
-    },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
-    "typecheck": {
-      "dependsOn": ["^typecheck"]
-    },
+    "typecheck": {},
     "dev": {
       "cache": false,
       "persistent": true
-    }
+    },
+    "test": {
+      "outputs": ["coverage/**"],
+      "env": ["TEST_DATABASE_URL", "BETTER_AUTH_SECRET"]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**"],
+      "env": ["VITE_API_URL"]
+    },
+    "test:watch": { "cache": false, "persistent": true }
   }
 }

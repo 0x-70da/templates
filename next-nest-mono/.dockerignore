@@ -1,0 +1,17 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.next
+**/.next
+coverage
+**/coverage
+.turbo
+**/.turbo
+.git
+.github
+.vscode
+.husky
+**/.env*
+!**/.env.example
+*.log

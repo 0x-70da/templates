@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:17-alpine
+    env_file: ./apps/server/.env
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      retries: 5
+    restart: unless-stopped
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    env_file: ./apps/server/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports: ["4000:4000"]
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000
+    env_file: ./apps/client/.env
+    depends_on: [server]
+    ports: ["3000:3000"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:

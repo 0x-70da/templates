@@ -1,5 +1,5 @@
 import { AppError } from "@workspace/service-kit";
-import { findTestByIdQuery } from "../../queries/test/test.query.js";
+import { findTestByIdQuery } from "@/queries/test/test.query";
 import type { Test } from "@workspace/types";
 
 export async function getTestService(id: string): Promise<Test> {

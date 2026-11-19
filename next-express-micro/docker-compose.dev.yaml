@@ -1,3 +1,4 @@
+name: next-express-micro-dev
 services:
   db:
     image: postgres:17-alpine
@@ -11,15 +12,5 @@ services:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 5s
       retries: 10
-  redis:
-    image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
-    ports: ["6379:6379"]
-    volumes: [redisdata-dev:/data]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      retries: 10
 volumes:
   pgdata-dev:
-  redisdata-dev:

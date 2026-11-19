@@ -1,4 +1,4 @@
-import { nullToUndefined } from "../../lib/nullToUndefined.js";
+import { nullToUndefined } from "@workspace/service-kit";
 
 export async function findTestByIdQuery(
   id: string,

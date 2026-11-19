@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { baseEnvSchema, loadEnv, startServer } from "@workspace/service-kit";
 import { z } from "zod";
-import app from "./app.js";
+import { app } from "./app";
 
 const env = loadEnv(
   baseEnvSchema.extend({

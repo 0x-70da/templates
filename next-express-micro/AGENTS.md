@@ -13,18 +13,14 @@ This is a pnpm/Turborepo monorepo. Read this file and the nearest app/package
 - Services use `requireInternal` before `requireAuth` or `requireAdmin`.
   Gateway-set identity headers are `x-user-id` and `x-user-role`; the gateway
   also sets `x-request-id` and `x-internal-secret`.
-- Synchronous calls use `callService`; asynchronous communication uses typed
-  BullMQ events. Event handlers must be idempotent.
+- “Cross-service communication: sync via `HTTP/REST`;
 - Keep the backend layout: domain subfolders under `controllers`, `services`,
   `queries`, and `tests`; one unit per file; routes are in `routes/`.
-- New services use `apps/<name>-service`, starting at the next free port after
-  4002. Add the event contract in `EventMap`, its subscriber list in
-  `eventSubscribers`, and its Zod schema in `eventSchemas`.
+- New services use `apps/<name>-service`, starting at the next free port after 4002.
 - Keep `oxlint.config.ts`, `packages/typescript-config`, Prettier, Husky,
   lint-staged, and existing Docker/Drizzle conventions unchanged.
 
 ## Commands
 
 Use pnpm. Run `pnpm lint`, `pnpm typecheck`, and targeted tests after code
-changes. Use `pnpm infra:up` for PostgreSQL and Redis. Do not commit unless
-asked.
+changes. Use pnpm db:up for PostgreSQL.

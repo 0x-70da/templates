@@ -1,21 +1,24 @@
-import { Client } from "pg";
-import { readdir } from "node:fs/promises";
-import path from "node:path";
+// scripts/ensure-databases.ts
+import { readdirSync } from "node:fs";
+import pg from "pg";
 
-const root = path.resolve(import.meta.dirname, "..");
-const apps = await readdir(path.join(root, "apps"), { withFileTypes: true });
-const databases = apps
-  .filter((entry) => entry.isDirectory() && entry.name.endsWith("-service"))
-  .map((entry) => entry.name.replace(/-/g, "_"));
+const adminUrl =
+  process.env.ADMIN_DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/postgres";
 
-const client = new Client({
-  connectionString:
-    process.env.DATABASE_ADMIN_URL ?? "postgresql://postgres:postgres@localhost:5432/postgres",
-});
+const names = readdirSync("apps", { withFileTypes: true })
+  .filter((d) => d.isDirectory() && d.name.endsWith("-service"))
+  .map((d) => d.name.replaceAll("-", "_"))
+  .filter((n) => /^[a-z0-9_]+$/.test(n))
+  .flatMap((n) => [n, `${n}_test`]);
+
+const client = new pg.Client({ connectionString: adminUrl });
 await client.connect();
-for (const database of databases) {
-  const escaped = database.replaceAll('"', '""');
-  const exists = await client.query("SELECT 1 FROM pg_database WHERE datname = $1", [database]);
-  if (exists.rowCount === 0) await client.query(`CREATE DATABASE "${escaped}"`);
+for (const name of names) {
+  const { rowCount } = await client.query("select 1 from pg_database where datname = $1", [name]);
+  if (!rowCount) {
+    await client.query(`create database "${name}"`);
+    console.log(`created database ${name}`);
+  }
 }
+
 await client.end();

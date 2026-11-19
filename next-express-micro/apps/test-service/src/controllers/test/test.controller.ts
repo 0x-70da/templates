@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { error, success } from "@workspace/service-kit";
-import { getTestService } from "../../services/test/test.service.js";
+import { getTestService } from "@/services/test/test.service";
 import { testSchema } from "@workspace/validation";
 
 export async function getTestController(req: Request, res: Response): Promise<void> {

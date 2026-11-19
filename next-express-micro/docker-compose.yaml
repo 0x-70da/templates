@@ -1,31 +1,18 @@
+name: next-express-micro
 services:
   db:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
-    volumes: [pgdata:/var/lib/postgresql/data]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports: ["127.0.0.1:5432:5432"] # للـ migrations من جهازك أو SSH tunnel، مش مفتوح للإنترنت
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
-      interval: 5s
-      retries: 10
-    networks: [private]
-
-  redis:
-    image: redis:7-alpine
-    command:
-      [
-        "redis-server",
-        "--appendonly",
-        "yes",
-        "--requirepass",
-        "${REDIS_PASSWORD:-redis-password}",
-        "--maxmemory-policy",
-        "noeviction",
-      ]
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis-password}", "ping"]
       interval: 5s
       retries: 10
     networks: [private]
@@ -34,24 +21,36 @@ services:
     build:
       context: .
       dockerfile: apps/gateway/Dockerfile
+    restart: unless-stopped
     env_file: ./apps/gateway/.env
+    environment:
+      NODE_ENV: production
+      AUTH_SERVICE_URL: http://auth-service:4001
+      TEST_SERVICE_URL: http://test-service:4002
+      # <generator:gateway-env>
     depends_on:
       auth-service: { condition: service_healthy }
-      test-service: { condition: service_healthy }
-      redis: { condition: service_healthy }
     ports: ["4000:4000"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:4000/health"]
+      interval: 5s
+      retries: 10
     networks: [private]
 
   auth-service:
     build:
       context: .
       dockerfile: apps/auth-service/Dockerfile
+    restart: unless-stopped
     env_file: ./apps/auth-service/.env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/auth_service
     depends_on:
       db: { condition: service_healthy }
     expose: ["4001"]
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4001/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:4001/health"]
       interval: 5s
       retries: 10
     networks: [private]
@@ -60,13 +59,16 @@ services:
     build:
       context: .
       dockerfile: apps/test-service/Dockerfile
+    restart: unless-stopped
     env_file: ./apps/test-service/.env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/test_service
     depends_on:
       db: { condition: service_healthy }
-      redis: { condition: service_healthy }
     expose: ["4002"]
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4002/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:4002/health"]
       interval: 5s
       retries: 10
     networks: [private]
@@ -79,9 +81,12 @@ services:
       dockerfile: apps/client/Dockerfile
       args:
         GATEWAY_URL: http://gateway:4000
+    restart: unless-stopped
     env_file: ./apps/client/.env
+    environment:
+      GATEWAY_URL: http://gateway:4000
     depends_on:
-      gateway: { condition: service_started }
+      gateway: { condition: service_healthy }
     ports: ["3000:3000"]
     networks: [private]
 

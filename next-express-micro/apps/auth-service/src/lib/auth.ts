@@ -1,10 +1,11 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db/index";
-import { account, session, user, verification } from "@/db/auth-schema";
+import { account, jwks, session, user, verification } from "@/db/auth-schema";
 import { admin } from "better-auth/plugins";
 import { bearer } from "better-auth/plugins/bearer";
 import { jwt } from "better-auth/plugins/jwt";
+import { env } from "@/env";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
@@ -17,6 +18,7 @@ export const auth = betterAuth({
       session,
       account,
       verification,
+      jwks,
     },
   }),
   emailAndPassword: {
@@ -27,15 +29,15 @@ export const auth = betterAuth({
     bearer(),
     jwt({
       jwt: {
-        issuer: process.env.JWT_ISSUER,
-        audience: process.env.JWT_AUDIENCE,
-        expirationTime: process.env.JWT_EXPIRES_IN ?? "15m",
+        issuer: env.JWT_ISSUER,
+        audience: env.JWT_AUDIENCE,
+        expirationTime: env.JWT_EXPIRES_IN ?? "15m",
         definePayload: ({ user: sessionUser }) => ({
-          role: sessionUser.role,
+          role: sessionUser.role ?? "user",
         }),
       },
       jwks: {
-        keyPairConfig: { alg: "EdDSA" },
+        keyPairConfig: { alg: "EdDSA", crv: "Ed25519" },
       },
     }),
   ],

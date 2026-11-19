@@ -1,4 +1,0 @@
-import "dotenv/config"; import { baseEnvSchema, loadEnv, startServer } from
-"@workspace/service-kit"; import { z } from "zod"; import app from "./app.js"; const env =
-loadEnv(baseEnvSchema.extend({ DATABASE_URL: z.string().url(), REDIS_URL: z.string().url(), }));
-startServer({ app, name: "{{kebabCase name}}-service", port: env.PORT });

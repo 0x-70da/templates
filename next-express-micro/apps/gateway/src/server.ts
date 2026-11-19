@@ -1,12 +1,6 @@
-import "dotenv/config";
+// src/server.ts
 import { startServer } from "@workspace/service-kit";
-import { app, env } from "./app.js";
+import { createGatewayApp } from "./app";
+import { env } from "./env";
 
-startServer({
-  app,
-  name: "gateway",
-  port: Number(env.PORT ?? 4000),
-  onShutdown: async () => {
-    await app.locals.redis.quit();
-  },
-});
+startServer({ app: createGatewayApp(), name: "gateway", port: env.PORT });

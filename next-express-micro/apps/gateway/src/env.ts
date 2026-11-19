@@ -1,22 +1,28 @@
+// src/env.ts
+import "dotenv/config";
+import { baseEnvSchema, loadEnv } from "@workspace/service-kit";
 import { z } from "zod";
-import { services } from "./services.registry.js";
+import { services } from "./services.registry";
 
-const serviceUrlShape = Object.fromEntries(
-  services.map((service) => [service.urlEnv, z.string().url()]),
-);
+const serviceUrls = Object.fromEntries(services.map((s) => [s.urlEnv, z.url()]));
 
-export const gatewayEnvSchema = z
-  .object({
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-    PORT: z.coerce.number().default(4000),
-    LOG_LEVEL: z.string().default("info"),
-    INTERNAL_SECRET: z.string().min(1),
-    CORS_ORIGINS: z.string().default("http://localhost:3000"),
-    REDIS_URL: z.string().url(),
-    JWT_ISSUER: z.string().url(),
+export const env = loadEnv(
+  baseEnvSchema.extend({
+    ...serviceUrls,
+    AUTH_SERVICE_URL: z.url(),
+    CORS_ORIGINS: z.string().transform((v) =>
+      v
+        .split(",")
+        .map((o) => o.trim())
+        .filter(Boolean),
+    ),
+    JWT_ISSUER: z.string().min(1),
     JWT_AUDIENCE: z.string().min(1),
-    JWKS_URL: z.string().url(),
-    COOKIE_EXCHANGE_CACHE_TTL_MS: z.coerce.number().default(5000),
-    PROXY_TIMEOUT_MS: z.coerce.number().default(10000),
-  })
-  .extend(serviceUrlShape);
+    JWKS_URL: z.url().optional(),
+    COOKIE_EXCHANGE_CACHE_TTL_MS: z.coerce.number().int().min(0).default(5000),
+    PROXY_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+    RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
+    AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
+    TRUST_PROXY: z.coerce.number().int().min(0).default(1),
+  }),
+);

@@ -1,8 +1,6 @@
 {
   "name": "test-service",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
   "license": "ISC",
   "type": "module",
   "scripts": {
@@ -14,7 +12,6 @@
     "db:migrate": "drizzle-kit migrate ",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "auth:generate": "pnpm dlx auth generate --config src/lib/auth.ts --output src/db/auth-schema.ts -y",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
     "test:int": "vitest run --project integration",
@@ -22,18 +19,16 @@
   },
   "dependencies": {
     "@workspace/service-kit": "workspace:*",
-    "@workspace/types": "workspace:*",
     "@workspace/validation": "workspace:*",
-    "better-auth": "^1.7.7",
-    "cors": "^2.8.6",
     "dotenv": "^18.0.7",
     "drizzle-orm": "1.0.0-rc.4",
     "express": "catalog:",
+    "helmet": "^8.3.0",
     "pg": "catalog:",
+    "pino": "^10.4.0",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24",
     "@types/pg": "^8.23.1",

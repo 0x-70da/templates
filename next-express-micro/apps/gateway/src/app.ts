@@ -1,90 +1,104 @@
-import type { z } from "zod";
+// src/app.ts
+import { ServerResponse } from "node:http";
+import {
+  createLogger,
+  errorHandler,
+  notFoundHandler,
+  requestContext,
+  requestLogger,
+} from "@workspace/service-kit";
 import cors from "cors";
 import express from "express";
+import { rateLimit } from "express-rate-limit";
 import helmet from "helmet";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import IORedis from "ioredis";
-import { errorHandler, httpLogger, notFound, requestContext } from "@workspace/service-kit";
-import { gatewayEnvSchema } from "./env.js";
-import { identityMiddleware } from "./identity.js";
-import { services } from "./services.registry.js";
+import { env } from "./env";
+import { createIdentityMiddleware } from "./middlewares/identity.middleware";
+import { stripSpoofableHeaders } from "./middlewares/stripSpoofable.middleware";
+import { serviceUrl, services } from "./services.registry";
 
-export function createGatewayApp(env: z.output<typeof gatewayEnvSchema>) {
-  const app = express();
-  const redis = new IORedis(env.REDIS_URL!, { maxRetriesPerRequest: null });
-  app.use((req, _res, next) => {
-    for (const header of ["x-user-id", "x-user-role", "x-internal-secret", "x-request-id"]) {
-      delete req.headers[header];
-    }
-    next();
+const limiter = (limit: number) =>
+  rateLimit({
+    windowMs: 60_000,
+    limit,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: { success: false, message: "Too many requests, please try again later" },
   });
+
+export function createGatewayApp() {
+  const app = express();
+  app.disable("x-powered-by");
+  app.set("trust proxy", env.TRUST_PROXY);
+
+  app.use(stripSpoofableHeaders); // لازم أول حاجة
   app.use(requestContext);
-  app.use(httpLogger("gateway"));
+  app.use(requestLogger(createLogger("gateway")));
   app.use(helmet());
-  app.use(
-    cors({
-      origin: env.CORS_ORIGINS!.split(",").map((origin) => origin.trim()),
-      credentials: true,
-    }),
-  );
-  app.get("/health", (_req, res) => res.json({ status: "ok" }));
+  app.use(cors({ origin: env.CORS_ORIGINS, credentials: true }));
+
+  app.get("/health", (_req, res) => {
+    res.json({ status: "ok", service: "gateway" });
+  });
   app.get("/health/ready", async (_req, res) => {
-    const checks: Record<string, boolean> = { redis: false };
-    try {
-      checks.redis = (await redis.ping()) === "PONG";
-    } catch {
-      checks.redis = false;
-    }
-    await Promise.all(
-      services.map(async (service) => {
+    const results = await Promise.all(
+      services.map(async (s) => {
         try {
-          const response = await fetch(new URL("/health", env[service.urlEnv]), {
+          const r = await fetch(`${serviceUrl(s.urlEnv)}/health`, {
             signal: AbortSignal.timeout(2000),
           });
-          checks[service.name] = response.ok;
+          return [s.name, r.ok] as const;
         } catch {
-          checks[service.name] = false;
+          return [s.name, false] as const;
         }
       }),
     );
-    const healthy = Object.values(checks).every(Boolean);
-    res.status(healthy ? 200 : 503).json({ status: healthy ? "ok" : "error", checks });
+    const ok = results.every(([, up]) => up);
+    res
+      .status(ok ? 200 : 503)
+      .json({ status: ok ? "ok" : "degraded", services: Object.fromEntries(results) });
   });
+
+  app.use(limiter(env.RATE_LIMIT_MAX));
+  app.use("/api/auth", limiter(env.AUTH_RATE_LIMIT_MAX));
+
   for (const service of services) {
-    const target = env[service.urlEnv]!;
+    if (service.access !== "public") {
+      app.use(service.prefix, createIdentityMiddleware(service.access));
+    }
     app.use(
-      service.prefix,
-      identityMiddleware(service.access, {
-        AUTH_SERVICE_URL: env.AUTH_SERVICE_URL!,
-        INTERNAL_SECRET: env.INTERNAL_SECRET!,
-        JWKS_URL: env.JWKS_URL!,
-        JWT_ISSUER: env.JWT_ISSUER!,
-        JWT_AUDIENCE: env.JWT_AUDIENCE!,
-        COOKIE_EXCHANGE_CACHE_TTL_MS: Number(env.COOKIE_EXCHANGE_CACHE_TTL_MS ?? 5000),
-      }),
       createProxyMiddleware({
-        target,
-        changeOrigin: true,
-        proxyTimeout: Number(env.PROXY_TIMEOUT_MS ?? 10000),
-        timeout: Number(env.PROXY_TIMEOUT_MS ?? 10000),
-        pathRewrite: (path) => service.prefix + path,
+        target: serviceUrl(service.urlEnv),
+        pathFilter: service.prefix,
+        changeOrigin: false,
+        xfwd: true,
+        proxyTimeout: env.PROXY_TIMEOUT_MS,
+        timeout: env.PROXY_TIMEOUT_MS,
         on: {
-          proxyReq: (proxyReq, req) => {
-            if (req.user) {
-              proxyReq.setHeader("x-user-id", req.user.id);
-              if (req.user.role) proxyReq.setHeader("x-user-role", req.user.role);
-            }
-            proxyReq.setHeader("x-internal-secret", env.INTERNAL_SECRET!);
+          proxyReq: (proxyReq) => {
+            proxyReq.setHeader("x-internal-secret", env.INTERNAL_SECRET);
+          },
+          error: (error, _req, res) => {
+            if (!(res instanceof ServerResponse)) return;
+            if (res.headersSent) return void res.end();
+            const code = (error as NodeJS.ErrnoException).code;
+            const status = code === "ETIMEDOUT" || code === "ECONNRESET" ? 504 : 502;
+            res.writeHead(status, { "content-type": "application/json" });
+            // عدّل الشكل ليطابق lib/response.ts عندك
+            res.end(
+              JSON.stringify({
+                success: false,
+                message: status === 504 ? "Upstream timeout" : "Upstream unavailable",
+              }),
+            );
           },
         },
       }),
     );
   }
-  app.use(notFound);
+
+  // مهم: مفيش express.json() هنا، الـ body بيعدي للـ upstream كما هو
+  app.use(notFoundHandler);
   app.use(errorHandler);
-  app.locals.redis = redis;
   return app;
 }
-
-export const env = gatewayEnvSchema.parse(process.env);
-export const app = createGatewayApp(env);

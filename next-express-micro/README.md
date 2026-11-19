@@ -28,15 +28,23 @@ code is in `packages/service-kit`; cross-service contracts are in
 
 ```bash
 pnpm install
+cp apps/auth-service/.env.example apps/auth-service/.env
+cp apps/gateway/.env.example apps/gateway/.env
+cp apps/test-service/.env.example apps/test-service/.env
+cp apps/client/.env.example apps/client/.env
 pnpm infra:up
 pnpm --filter auth-service db:generate
 pnpm --filter test-service db:generate
+pnpm --filter auth-service db:push
+pnpm --filter test-service db:push
 pnpm dev
 ```
 
-Copy each `apps/*/.env.example` to `.env` and set one shared
-`INTERNAL_SECRET`. The Next rewrite uses `GATEWAY_URL` at build time, so the
-client Dockerfile passes it as a build argument.
+The copies above use Docker service hostnames. For local `pnpm dev`, replace
+`db` with `localhost:5432` and `redis` with `localhost:6379` in the three
+backend `.env` files. Set one shared `INTERNAL_SECRET` and replace the example
+secrets before production use. The Next rewrite uses `GATEWAY_URL` at build
+time, so the client Dockerfile passes it as a build argument.
 
 ## Adding a service
 
@@ -69,14 +77,14 @@ cached only for `COOKIE_EXCHANGE_CACHE_TTL_MS`.
 
 ## Environment
 
-| Variable | Used by | Purpose |
-| --- | --- | --- |
-| `INTERNAL_SECRET` | gateway/services | Private service authentication |
-| `DATABASE_URL` | each service | Service-owned PostgreSQL database |
-| `REDIS_URL` | gateway/event services | Redis connection |
-| `AUTH_SERVICE_URL`, `TEST_SERVICE_URL` | gateway | Internal service URLs |
-| `JWT_ISSUER`, `JWT_AUDIENCE`, `JWKS_URL` | gateway/auth | JWT verification |
-| `BETTER_AUTH_URL`, `TRUSTED_ORIGINS` | auth | Public auth origin |
+| Variable                                 | Used by                | Purpose                           |
+| ---------------------------------------- | ---------------------- | --------------------------------- |
+| `INTERNAL_SECRET`                        | gateway/services       | Private service authentication    |
+| `DATABASE_URL`                           | each service           | Service-owned PostgreSQL database |
+| `REDIS_URL`                              | gateway/event services | Redis connection                  |
+| `AUTH_SERVICE_URL`, `TEST_SERVICE_URL`   | gateway                | Internal service URLs             |
+| `JWT_ISSUER`, `JWT_AUDIENCE`, `JWKS_URL` | gateway/auth           | JWT verification                  |
+| `BETTER_AUTH_URL`, `TRUSTED_ORIGINS`     | auth                   | Public auth origin                |
 
 ## Intentionally not included
 

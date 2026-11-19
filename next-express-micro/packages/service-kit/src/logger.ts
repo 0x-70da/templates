@@ -1,17 +1,15 @@
-import pino from "pino";
-import pinoHttp from "pino-http";
-import { getRequestContext } from "./context.js";
+// src/logger.ts
+import pino, { type Logger } from "pino";
+import { getRequestId } from "./context";
 
-export function createLogger(name: string) {
+export type { Logger };
+
+export function createLogger(name: string): Logger {
   return pino({
+    name,
     level: process.env.LOG_LEVEL ?? "info",
-    base: { service: name },
-    redact: ["req.headers.authorization", "req.headers.cookie", "res.headers['set-cookie']"],
-    mixin: () => ({ requestId: getRequestContext()?.requestId }),
+    mixin: () => ({ requestId: getRequestId() }),
+    redact: ["req.headers.authorization", "req.headers.cookie", 'req.headers["x-internal-secret"]'],
     ...(process.env.NODE_ENV === "development" ? { transport: { target: "pino-pretty" } } : {}),
   });
-}
-
-export function httpLogger(name: string) {
-  return pinoHttp({ logger: createLogger(name) });
 }

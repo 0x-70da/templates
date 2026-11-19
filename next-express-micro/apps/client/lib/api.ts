@@ -12,41 +12,29 @@ export type ApiResponse<T> = ApiBody<T> & {
   headers: Headers;
 };
 
-export const get = async <T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(`/api${url}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...options,
-    credentials: "include",
-  });
-  const responseBody = (await response.json()) as ApiBody<T>;
-  return {
-    ...responseBody,
-    status: response.status,
-    statusText: response.statusText,
-    url: response.url,
-    ok: response.ok,
-    headers: response.headers,
-  };
-};
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-export const post = async <T>(
+// المتصفح: same-origin /api/* (Next rewrite → gateway). السيرفر (RSC/SSR): عنوان الـ gateway كامل
+const apiBase = (): string =>
+  typeof window === "undefined" ? (process.env.GATEWAY_URL ?? "") : "";
+
+async function request<T>(
+  method: Method,
   url: string,
   body?: unknown,
   options?: RequestInit,
-): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(`/api${url}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+): Promise<ApiResponse<T>> {
+  const response: Response = await fetch(`${apiBase()}/api${url}`, {
+    method,
+    headers: { "Content-Type": "application/json" },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     ...options,
     credentials: "include",
   });
-  const responseBody = (await response.json()) as ApiBody<T>;
+  const responseBody = (await response.json().catch(() => ({
+    success: response.ok,
+    message: response.statusText,
+  }))) as ApiBody<T>;
   return {
     ...responseBody,
     status: response.status,
@@ -55,74 +43,15 @@ export const post = async <T>(
     ok: response.ok,
     headers: response.headers,
   };
-};
+}
 
-export const put = async <T>(
-  url: string,
-  body?: unknown,
-  options?: RequestInit,
-): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(`/api${url}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    ...options,
-    credentials: "include",
-  });
-  const responseBody = (await response.json()) as ApiBody<T>;
-  return {
-    ...responseBody,
-    status: response.status,
-    statusText: response.statusText,
-    url: response.url,
-    ok: response.ok,
-    headers: response.headers,
-  };
-};
-
-export const patch = async <T>(
-  url: string,
-  body?: unknown,
-  options?: RequestInit,
-): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(`/api${url}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    ...options,
-    credentials: "include",
-  });
-  const responseBody = (await response.json()) as ApiBody<T>;
-  return {
-    ...responseBody,
-    status: response.status,
-    statusText: response.statusText,
-    url: response.url,
-    ok: response.ok,
-    headers: response.headers,
-  };
-};
-
-export const del = async <T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> => {
-  const response: Response = await fetch(`/api${url}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...options,
-    credentials: "include",
-  });
-  const responseBody = (await response.json()) as ApiBody<T>;
-  return {
-    ...responseBody,
-    status: response.status,
-    statusText: response.statusText,
-    url: response.url,
-    ok: response.ok,
-    headers: response.headers,
-  };
-};
+export const get = <T>(url: string, options?: RequestInit) =>
+  request<T>("GET", url, undefined, options);
+export const post = <T>(url: string, body?: unknown, options?: RequestInit) =>
+  request<T>("POST", url, body, options);
+export const put = <T>(url: string, body?: unknown, options?: RequestInit) =>
+  request<T>("PUT", url, body, options);
+export const patch = <T>(url: string, body?: unknown, options?: RequestInit) =>
+  request<T>("PATCH", url, body, options);
+export const del = <T>(url: string, options?: RequestInit) =>
+  request<T>("DELETE", url, undefined, options);
